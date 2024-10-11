@@ -1,0 +1,2510 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Dashboard for alertsnitch。https://gitlab.com/yakshaving.art/alertsnitch",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "gnetId": 15833,
+  "graphTooltip": 0,
+  "id": 53,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "default": false,
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.0-193362",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COUNT(1)\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n  AND status=\"firing\"",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "total number of alert sended",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "description"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 436
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 104
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "startsAt"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 156
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "严重性"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 98
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 22,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "frameIndex": 1,
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.3.0-193362",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  startsAt AS time,\n  status,\n  ID\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n  AND status=\"firing\"\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"firing\"\n\t)\n\tAND Label=\"severity\"",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "alert statistics",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "ID": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "severity": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "ID (count)": "count",
+              "severity": "level"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.0-193362",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  COUNT(1)\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n  AND status=\"resolved\"",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "total number of alert resolved",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "description"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 436
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 104
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "startsAt"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 156
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 24,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "frameIndex": 1,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "startsAt"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.0-193362",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  startsAt AS time,\n  status,\n  ID\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n  AND status=\"resolved\"\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"severity\"",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "resolved statistics",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "ID": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "severity": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "ID (count)": "次数",
+              "severity": "严重性"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 1,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  startsAt AS time,\n  ID\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n  AND status=\"firing\"\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "alert triggered",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "ID": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "time": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "ID (count)": "alert triggered count"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "8.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  startsAt AS time,\n  ID\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n  AND status=\"resolved\"\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "resolved triggered",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "ID": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "time": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "ID (count)": "恢复触发次数"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "description"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 436
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 104
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "startsAt"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 156
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ID (last)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 106
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "持续时间"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 26,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "frameIndex": 2,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "ID (last)"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.0-193362",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  ID,\n  status,\n  startsAt,\n  endsAt,\n  TIMESTAMPDIFF(SECOND, startsAt, UTC_TIMESTAMP()) AS duration,\n  fingerprint\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\nORDER BY ID",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"alertname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"alertname\"",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"env\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"env\"",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"severity\"",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"az\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"az\"",
+          "refId": "E",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"hostname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"hostname\"",
+          "refId": "F",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"project\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"project\"",
+          "refId": "G",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"description\"\nFROM\n\tAlertAnnotation\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Annotation=\"description\"",
+          "refId": "H",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "alert not resolved",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "ID": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "alertname": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "az": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "description": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "duration": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "endsAt": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "env": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "fingerprint": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "hostname": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "project": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "severity": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "startsAt": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              },
+              "status": {
+                "aggregations": [
+                  "last"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "firing"
+                  }
+                },
+                "fieldName": "status (last)"
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "ID (last)",
+                "startsAt (last)",
+                "duration (last)",
+                "alertname (last)",
+                "hostname (last)",
+                "description (last)"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "ID (last)": "ID",
+              "alertname (last)": "alertname",
+              "description (last)": "description",
+              "duration (last)": "duration",
+              "hostname (last)": "主机名",
+              "startsAt (last)": "start at"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "description"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 436
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 104
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "持续时间"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "frameIndex": 2,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "ID"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.0-193362",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  ID,\n  status,\n  startsAt,\n  endsAt,\n  TIMESTAMPDIFF(SECOND, startsAt, endsAt) AS duration,\n  fingerprint\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n  AND status=\"resolved\"\nORDER BY startsAt",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"alertname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"alertname\"",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"env\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"env\"",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"severity\"",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"az\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"az\"",
+          "refId": "E",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"hostname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"hostname\"",
+          "refId": "F",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"project\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"project\"",
+          "refId": "G",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"description\"\nFROM\n\tAlertAnnotation\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Annotation=\"description\"",
+          "refId": "H",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "alert resolved",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "ID",
+                "alertname",
+                "hostname",
+                "description",
+                "startsAt",
+                "endsAt",
+                "duration"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "ID": 0,
+              "alertname": 1,
+              "description": 6,
+              "duration": 4,
+              "endsAt": 3,
+              "hostname": 5,
+              "startsAt": 2
+            },
+            "renameByName": {
+              "ID": "ID",
+              "alertname": "名称",
+              "description": "描述",
+              "duration": "持续时间",
+              "endsAt": "结束时间",
+              "hostname": "主机名",
+              "startsAt": "开始时间"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 28,
+      "panels": [],
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "alert details query",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "mysql",
+        "uid": "ce0kdi3fp93pcb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "description"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 436
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "severity"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 104
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 94
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "startsAt"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 156
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 22,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "frameIndex": 2,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "ID"
+          }
+        ]
+      },
+      "pluginVersion": "11.3.0-193362",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  ID,\n  status,\n  startsAt,\n  endsAt,\n  fingerprint\nFROM Alert\nWHERE\n  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\nORDER BY ID",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"alertname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"alertname\"",
+          "refId": "B",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"env\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"env\"",
+          "refId": "C",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"severity\"",
+          "refId": "D",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"az\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"az\"",
+          "refId": "E",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"hostname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"hostname\"",
+          "refId": "F",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"project\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"project\"",
+          "refId": "G",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "mysql",
+            "uid": "ce0kdi3fp93pcb"
+          },
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"description\"\nFROM\n\tAlertAnnotation\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Annotation=\"description\"",
+          "refId": "H",
+          "select": [
+            [
+              {
+                "params": [
+                  "ID"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "table": "alert",
+          "timeColumn": "startsAt",
+          "timeColumnType": "timestamp",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        }
+      ],
+      "title": "history alert details",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "ID": false,
+              "alertGroupID": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "ID": 0,
+              "alertGroupID": 1,
+              "alertname": 2,
+              "az": 6,
+              "description": 8,
+              "endsAt": 11,
+              "env": 7,
+              "fingerprint": 12,
+              "hostname": 4,
+              "project": 5,
+              "severity": 9,
+              "startsAt": 10,
+              "status": 3
+            },
+            "renameByName": {
+              "ID": "",
+              "alertname": "",
+              "az": "地区",
+              "description": "",
+              "endsAt": "",
+              "env": "环境",
+              "hostname": "主机名",
+              "project": "项目",
+              "severity": "",
+              "startsAt": "",
+              "status": ""
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "2024-10-10T16:00:00.000Z",
+    "to": "2024-10-13T15:59:59.000Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "prometheus alert history",
+  "uid": "E9sEj4J7k",
+  "version": 15,
+  "weekStart": ""
+}
