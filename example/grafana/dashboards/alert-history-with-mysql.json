@@ -1,4 +1,47 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_MYSQL-ALERTSNITCH",
+      "label": "mysql-alertsnitch",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "mysql",
+      "pluginName": "MySQL"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "12.2.0"
+    },
+    {
+      "type": "datasource",
+      "id": "mysql",
+      "name": "MySQL",
+      "version": "12.2.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -24,17 +67,13 @@
   "description": "Dashboard for alertsnitch。https://gitlab.com/yakshaving.art/alertsnitch",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "gnetId": 15833,
   "graphTooltip": 0,
-  "id": 53,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
-        "default": false,
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -47,7 +86,7 @@
             "steps": [
               {
                 "color": "red",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -82,12 +121,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0-193362",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "editorMode": "code",
           "format": "table",
@@ -140,9 +179,8 @@
     },
     {
       "datasource": {
-        "default": false,
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -155,6 +193,9 @@
               "type": "auto"
             },
             "filterable": true,
+            "footer": {
+              "reducers": []
+            },
             "inspect": false
           },
           "mappings": [],
@@ -163,7 +204,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -244,24 +285,16 @@
       "id": 22,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
         "frameIndex": 1,
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "11.3.0-193362",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "editorMode": "code",
           "format": "table",
@@ -312,7 +345,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "editorMode": "code",
           "format": "table",
@@ -392,7 +425,7 @@
             "indexByName": {},
             "renameByName": {
               "ID (count)": "count",
-              "severity": "level"
+              "severity": ""
             }
           }
         }
@@ -401,9 +434,8 @@
     },
     {
       "datasource": {
-        "default": false,
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -416,7 +448,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "green",
@@ -451,12 +483,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0-193362",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "editorMode": "code",
           "format": "table",
@@ -509,9 +541,8 @@
     },
     {
       "datasource": {
-        "default": false,
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -524,6 +555,9 @@
               "type": "auto"
             },
             "filterable": true,
+            "footer": {
+              "reducers": []
+            },
             "inspect": false
           },
           "mappings": [],
@@ -532,7 +566,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -601,14 +635,6 @@
       "id": 24,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
         "frameIndex": 1,
         "showHeader": true,
         "sortBy": [
@@ -618,12 +644,12 @@
           }
         ]
       },
-      "pluginVersion": "11.3.0-193362",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "editorMode": "code",
           "format": "table",
@@ -674,7 +700,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "editorMode": "code",
           "format": "table",
@@ -750,10 +776,11 @@
           "id": "organize",
           "options": {
             "excludeByName": {},
+            "includeByName": {},
             "indexByName": {},
             "renameByName": {
-              "ID (count)": "次数",
-              "severity": "严重性"
+              "ID (count)": "count",
+              "severity": ""
             }
           }
         }
@@ -762,9 +789,8 @@
     },
     {
       "datasource": {
-        "default": false,
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -795,6 +821,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -810,7 +837,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -836,16 +863,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "8.3.3",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "editorMode": "code",
           "format": "table",
@@ -919,7 +947,7 @@
             "includeByName": {},
             "indexByName": {},
             "renameByName": {
-              "ID (count)": "alert triggered count"
+              "ID (count)": "count"
             }
           }
         }
@@ -929,7 +957,7 @@
     {
       "datasource": {
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -960,6 +988,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -975,7 +1004,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -1001,16 +1030,17 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "8.3.3",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1063,9 +1093,10 @@
           "id": "organize",
           "options": {
             "excludeByName": {},
+            "includeByName": {},
             "indexByName": {},
             "renameByName": {
-              "ID (count)": "恢复触发次数"
+              "ID (count)": "count"
             }
           }
         }
@@ -1075,7 +1106,7 @@
     {
       "datasource": {
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1088,6 +1119,9 @@
               "type": "auto"
             },
             "filterable": true,
+            "footer": {
+              "reducers": []
+            },
             "inspect": false
           },
           "mappings": [],
@@ -1096,7 +1130,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -1189,14 +1223,6 @@
       "id": 26,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
         "frameIndex": 2,
         "showHeader": true,
         "sortBy": [
@@ -1206,12 +1232,12 @@
           }
         ]
       },
-      "pluginVersion": "11.3.0-193362",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1244,7 +1270,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1277,7 +1303,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1310,7 +1336,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1343,7 +1369,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1376,7 +1402,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1409,7 +1435,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1442,7 +1468,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1617,7 +1643,7 @@
     {
       "datasource": {
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1630,6 +1656,9 @@
               "type": "auto"
             },
             "filterable": true,
+            "footer": {
+              "reducers": []
+            },
             "inspect": false
           },
           "mappings": [],
@@ -1638,7 +1667,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -1707,14 +1736,6 @@
       "id": 10,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
         "frameIndex": 2,
         "showHeader": true,
         "sortBy": [
@@ -1724,12 +1745,12 @@
           }
         ]
       },
-      "pluginVersion": "11.3.0-193362",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1762,7 +1783,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1795,7 +1816,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1828,7 +1849,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1861,7 +1882,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1894,7 +1915,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1927,7 +1948,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -1960,7 +1981,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2017,6 +2038,7 @@
           "id": "organize",
           "options": {
             "excludeByName": {},
+            "includeByName": {},
             "indexByName": {
               "ID": 0,
               "alertname": 1,
@@ -2027,13 +2049,13 @@
               "startsAt": 2
             },
             "renameByName": {
-              "ID": "ID",
-              "alertname": "名称",
-              "description": "描述",
-              "duration": "持续时间",
-              "endsAt": "结束时间",
+              "ID": "",
+              "alertname": "",
+              "description": "",
+              "duration": "",
+              "endsAt": "",
               "hostname": "主机名",
-              "startsAt": "开始时间"
+              "startsAt": ""
             }
           }
         }
@@ -2042,10 +2064,6 @@
     },
     {
       "collapsed": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -2054,22 +2072,13 @@
       },
       "id": 28,
       "panels": [],
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "refId": "A"
-        }
-      ],
       "title": "alert details query",
       "type": "row"
     },
     {
       "datasource": {
         "type": "mysql",
-        "uid": "ce0kdi3fp93pcb"
+        "uid": "${DS_MYSQL-ALERTSNITCH}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2082,6 +2091,9 @@
               "type": "auto"
             },
             "filterable": true,
+            "footer": {
+              "reducers": []
+            },
             "inspect": false
           },
           "mappings": [],
@@ -2090,7 +2102,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -2159,14 +2171,6 @@
       "id": 2,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
         "frameIndex": 2,
         "showHeader": true,
         "sortBy": [
@@ -2176,12 +2180,12 @@
           }
         ]
       },
-      "pluginVersion": "11.3.0-193362",
+      "pluginVersion": "12.2.0",
       "targets": [
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2214,7 +2218,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2247,7 +2251,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2280,7 +2284,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2313,7 +2317,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2346,7 +2350,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2379,7 +2383,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2412,7 +2416,7 @@
         {
           "datasource": {
             "type": "mysql",
-            "uid": "ce0kdi3fp93pcb"
+            "uid": "${DS_MYSQL-ALERTSNITCH}"
           },
           "format": "table",
           "group": [],
@@ -2475,12 +2479,12 @@
             "renameByName": {
               "ID": "",
               "alertname": "",
-              "az": "地区",
+              "az": "",
               "description": "",
               "endsAt": "",
-              "env": "环境",
-              "hostname": "主机名",
-              "project": "项目",
+              "env": "",
+              "hostname": "",
+              "project": "",
               "severity": "",
               "startsAt": "",
               "status": ""
@@ -2492,19 +2496,20 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 39,
+  "schemaVersion": 42,
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "2024-10-10T16:00:00.000Z",
-    "to": "2024-10-13T15:59:59.000Z"
+    "from": "now-24h",
+    "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "prometheus alert history",
   "uid": "E9sEj4J7k",
-  "version": 15,
-  "weekStart": ""
+  "version": 4,
+  "weekStart": "",
+  "id": null
 }

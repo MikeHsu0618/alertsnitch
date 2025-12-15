@@ -2,9 +2,6 @@ package version
 
 import "fmt"
 
-// Name is the application name
-const Name = "alertsnitch"
-
 // Version is the application Version
 var Version string
 
@@ -16,5 +13,5 @@ var Commit string
 
 // GetVersion returns the version as a string
 func GetVersion() string {
-	return fmt.Sprintf("%s Version: %s Commit: %s Date: %s", Name, Version, Commit, Date)
+	return fmt.Sprintf("alertsnitch Version: %s, Commit: %s, Date: %s", Version, Commit, Date)
 }

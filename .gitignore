@@ -3,3 +3,7 @@
 tmp*
 
 *.tar
+
+alertsnitch
+
+coverage.out

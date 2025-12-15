@@ -2,10 +2,16 @@
 
 tmp*
 
-docker-compose.yml
-dockerfile
-Dockerfile.*
+*.tar
+
+alertsnitch
+
+coverage.out
+
+example/
+helm/
+tests/
+
+Dockerfile
 
 README.md
-
-*.tar

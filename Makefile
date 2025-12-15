@@ -73,7 +73,7 @@ bootstrap_local_testing: ### builds and bootstraps a local integration testing e
 		-e MYSQL_ROOT_PASSWORD=$(MYSQL_ROOT_PASSWORD) \
 		-e MYSQL_DATABASE=$(MYSQL_DATABASE) \
 		-p 3306:3306 \
-		-v $(CURRENT_DIR)/db.d/mysql:/db.scripts \
+		-v $(CURRENT_DIR)/database/mysql:/db.scripts \
 		-d \
 		mysql:8.0
 	@while ! docker exec alertsnitch-mysql mysql --database=$(MYSQL_DATABASE) --password=$(MYSQL_ROOT_PASSWORD) -e "SELECT 1" >/dev/null 2>&1 ; do \
