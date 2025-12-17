@@ -1,11 +1,9 @@
 # docker-compose --profile loki up
 # docker-compose --profile mysql up
 
-version: '3.7'
-
 services:
   alertsnitch:
-    image: mikehsu0618/alertsnitch:v0.7.0
+    image: mikehsu0618/alertsnitch:latest
     ports:
       - "9567:9567"
     env_file:
@@ -27,6 +25,8 @@ services:
       ALERTSNITCH_LOKI_BATCH_SIZE: "${ALERTSNITCH_LOKI_BATCH_SIZE:-100}"
       ALERTSNITCH_LOKI_BATCH_FLUSH_TIMEOUT: "${ALERTSNITCH_LOKI_BATCH_FLUSH_TIMEOUT:-5s}"
       ALERTSNITCH_LOKI_BATCH_MAX_RETRIES: "${ALERTSNITCH_LOKI_BATCH_MAX_RETRIES:-3}"
+      # Allowed labels configuration
+      ALERTSNITCH_LOKI_ALLOWED_LABELS: "${ALERTSNITCH_LOKI_ALLOWED_LABELS:-}"
       # Proxy configuration (Prometheus style - uses standard environment variables)
       HTTP_PROXY: "${HTTP_PROXY:-}"
       HTTPS_PROXY: "${HTTPS_PROXY:-}"
@@ -35,10 +35,10 @@ services:
       - "${ALERTSNITCH_BACKEND}"
     profiles:
       - loki
-      - mysql 
+      - mysql
 
   loki:
-    image: grafana/loki:3.0.0
+    image: grafana/loki:3.6.3
     container_name: loki
     ports:
       - "3100:3100"
@@ -49,10 +49,10 @@ services:
       retries: 10
       start_period: 5s
     profiles:
-      - loki 
+      - loki
 
   grafana:
-    image: grafana/grafana:11.2.0
+    image: grafana/grafana:12.3.1
     container_name: grafana
     ports:
       - "3000:3000"
@@ -66,7 +66,8 @@ services:
       - mysql
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.8.1
+    container_name: prometheus
     ports:
       - "9090:9090"
     profiles:
@@ -74,7 +75,7 @@ services:
 
   mysqldb:
     restart: always
-    image: mysql:8.0
+    image: mysql:8.4
     command: --default-authentication-plugin=mysql_native_password
     volumes:
       - ./database/mysql:/docker-entrypoint-initdb.d
@@ -90,4 +91,4 @@ services:
       timeout: 20s
       retries: 10
     profiles:
-      - mysql 
+      - mysql
