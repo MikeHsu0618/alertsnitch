@@ -3,6 +3,23 @@
 
 # AlertSnitch
 
+## 🎬 Demo
+
+Check out AlertSnitch in action with our custom Grafana plugin and HolmesGPT AI integration:
+
+<a href="https://drive.google.com/file/d/145B_BvAXb9c1mBILeN10YQtHkaI0gh_U/view?usp=sharing">
+  <img src="assets/AlertLLM.jpg" alt="AlertSnitch Demo - Click to watch video" width="800">
+</a>
+
+> 🎥 **Click the image above to watch the demo video**
+>
+> Features demonstrated:
+> - Alert statistics dashboard with custom AlertSnitch Grafana plugin
+> - AI-powered alert analysis with HolmesGPT integration
+> - Real-time alert history visualization
+
+---
+
 Captures Prometheus AlertManager alerts and writes them in MySQL, Postgres, or Loki 
 for future examination.
 
