@@ -1,6 +1,7 @@
 package db
 
 import (
+	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -20,6 +21,23 @@ import (
 	"github.com/stretchr/testify/require"
 	"gitlab.com/yakshaving.art/alertsnitch/internal"
 )
+
+// readRequestBody reads and decompresses gzip body from HTTP request
+func readRequestBody(t *testing.T, r *http.Request) []byte {
+	t.Helper()
+
+	var reader io.Reader = r.Body
+	if r.Header.Get("Content-Encoding") == "gzip" {
+		gzipReader, err := gzip.NewReader(r.Body)
+		require.NoError(t, err)
+		defer gzipReader.Close()
+		reader = gzipReader
+	}
+
+	body, err := io.ReadAll(reader)
+	require.NoError(t, err)
+	return body
+}
 
 // TestLokiConfig_Validate tests configuration validation
 func TestLokiConfig_Validate(t *testing.T) {
@@ -484,12 +502,11 @@ func TestLokiClient_BatchProcessing(t *testing.T) {
 		if r.URL.Path == "/loki/api/v1/push" {
 			requestCount++
 
-			// Verify request body
-			body, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
+			// Verify request body (handle gzip)
+			body := readRequestBody(t, r)
 
 			var payload payload
-			err = json.Unmarshal(body, &payload)
+			err := json.Unmarshal(body, &payload)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, payload.Streams)
 
@@ -825,8 +842,7 @@ func TestLokiClient_LargePayload(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/loki/api/v1/push" {
-			body, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
+			body := readRequestBody(t, r)
 			atomic.StoreInt64(&receivedBodySize, int64(len(body)))
 			w.WriteHeader(http.StatusNoContent)
 		} else if r.URL.Path == "/loki/api/v1/labels" {
@@ -879,12 +895,11 @@ func TestLokiClient_BatchFlushOnSize(t *testing.T) {
 		if r.URL.Path == "/loki/api/v1/push" {
 			atomic.AddInt64(&flushCount, 1)
 
-			// Verify batch size
-			body, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
+			// Verify batch size (handle gzip)
+			body := readRequestBody(t, r)
 
 			var payload payload
-			err = json.Unmarshal(body, &payload)
+			err := json.Unmarshal(body, &payload)
 			require.NoError(t, err)
 
 			// Check stream count (one stream per alert)

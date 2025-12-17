@@ -2,6 +2,7 @@ package db
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -13,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -88,6 +90,9 @@ type LokiConfig struct {
 	RequestTimeout time.Duration
 	TLS            TLSConfig
 	Batch          BatchConfig
+	// AllowedLabels specifies which labels from CommonLabels/GroupLabels should be extracted as stream labels
+	// If empty, default labels will be used
+	AllowedLabels []string
 }
 
 type TLSConfig struct {
@@ -185,12 +190,13 @@ type lokiClient struct {
 	client *http.Client
 	cfg    LokiConfig
 
-	batchEnabled bool
-	alertCh      chan alertGroupWithParams
-	stopCh       chan struct{}
-	wg           sync.WaitGroup
-	mu           sync.RWMutex
-	started      bool
+	batchEnabled  bool
+	alertCh       chan alertGroupWithParams
+	stopCh        chan struct{}
+	wg            sync.WaitGroup
+	mu            sync.RWMutex
+	started       bool
+	allowedLabels map[string]bool
 }
 
 func connectLoki(args ConnectionArgs) (*lokiClient, error) {
@@ -234,6 +240,17 @@ func connectLoki(args ConnectionArgs) (*lokiClient, error) {
 		}
 	}
 
+	// Parse allowed labels from options (comma-separated list)
+	var allowedLabelsList []string
+	if labels := args.Options["allowed_labels"]; labels != "" {
+		for _, label := range strings.Split(labels, ",") {
+			label = strings.TrimSpace(label)
+			if label != "" {
+				allowedLabelsList = append(allowedLabelsList, label)
+			}
+		}
+	}
+
 	cfg := LokiConfig{
 		Url: endpoint,
 		Auth: AuthConfig{
@@ -248,7 +265,8 @@ func connectLoki(args ConnectionArgs) (*lokiClient, error) {
 			ClientCertPath:     args.Options["tls_client_cert_path"],
 			ClientKeyPath:      args.Options["tls_client_key_path"],
 		},
-		Batch: batchConfig,
+		Batch:         batchConfig,
+		AllowedLabels: allowedLabelsList,
 	}
 
 	if err := cfg.Validate(); err != nil {
@@ -271,11 +289,38 @@ func connectLoki(args ConnectionArgs) (*lokiClient, error) {
 		},
 	}
 
+	// Build allowed labels map from config or use defaults
+	allowedLabelsMap := make(map[string]bool)
+	if len(cfg.AllowedLabels) > 0 {
+		for _, label := range cfg.AllowedLabels {
+			allowedLabelsMap[label] = true
+		}
+		logrus.Infof("Using custom allowed labels: %v", cfg.AllowedLabels)
+	} else {
+		// Use default allowed labels
+		allowedLabelsMap = map[string]bool{
+			"severity":  true,
+			"priority":  true,
+			"level":     true,
+			"instance":  true,
+			"job":       true,
+			"team":      true,
+			"env":       true,
+			"service":   true,
+			"pod":       true,
+			"namespace": true,
+			"node":      true,
+			"container": true,
+			"cluster":   true,
+		}
+	}
+
 	client := &lokiClient{
-		client:       httpClient,
-		cfg:          cfg,
-		batchEnabled: cfg.Batch.Enabled,
-		stopCh:       make(chan struct{}),
+		client:        httpClient,
+		cfg:           cfg,
+		batchEnabled:  cfg.Batch.Enabled,
+		stopCh:        make(chan struct{}),
+		allowedLabels: allowedLabelsMap,
 	}
 
 	if cfg.Batch.Enabled {
@@ -474,12 +519,23 @@ func (c *lokiClient) pushPayload(ctx context.Context, payload payload) error {
 		return fmt.Errorf("error marshalling Loki request: %w", err)
 	}
 
+	// Compress payload with gzip
+	var buf bytes.Buffer
+	gzipWriter := gzip.NewWriter(&buf)
+	if _, err := gzipWriter.Write(payloadBytes); err != nil {
+		return fmt.Errorf("error compressing payload: %w", err)
+	}
+	if err := gzipWriter.Close(); err != nil {
+		return fmt.Errorf("error closing gzip writer: %w", err)
+	}
+
 	uri := c.cfg.Url.JoinPath(lokiAPIPath, "push")
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uri.String(), bytes.NewBuffer(payloadBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uri.String(), &buf)
 	if err != nil {
 		return fmt.Errorf("error creating Loki push request: %w", err)
 	}
 
+	req.Header.Set("Content-Encoding", "gzip")
 	c.setAuthAndTenantHeaders(req)
 
 	res, err := c.client.Do(req)
@@ -650,8 +706,19 @@ func createStreamForStatus(status string, alerts []internal.Alert, data *interna
 		Values: make([]row, 0, len(alerts)),
 	}
 
-	now := time.Now()
 	for _, alert := range alerts {
+		// Use alert's actual timestamp instead of time.Now()
+		// For firing alerts: use StartsAt
+		// For resolved alerts: use EndsAt if valid, otherwise StartsAt
+		timestamp := alert.StartsAt
+		if status == "resolved" && !alert.EndsAt.IsZero() && alert.EndsAt.After(alert.StartsAt) {
+			timestamp = alert.EndsAt
+		}
+		// Fallback to now if timestamp is zero (should not happen)
+		if timestamp.IsZero() {
+			timestamp = time.Now()
+		}
+
 		flattenGroup := internal.FlattenAlertGroup{
 			Version:           data.Version,
 			GroupKey:          data.GroupKey,
@@ -670,7 +737,7 @@ func createStreamForStatus(status string, alerts []internal.Alert, data *interna
 		}
 
 		s.Values = append(s.Values, row{
-			At:  now,
+			At:  timestamp,
 			Val: string(jsonData),
 		})
 	}
@@ -684,7 +751,7 @@ func (c *lokiClient) dataToStream(data *internal.AlertGroup, extraLabels map[str
 	}
 
 	alertsByStatus := groupAlertsByStatus(data.Alerts)
-	baseLabels := buildStreamLabels(data, extraLabels)
+	baseLabels := c.buildStreamLabels(data, extraLabels)
 
 	streams := make([]stream, 0, len(alertsByStatus))
 
@@ -699,37 +766,21 @@ func (c *lokiClient) dataToStream(data *internal.AlertGroup, extraLabels map[str
 	return streams, nil
 }
 
-var allowedLabels = map[string]bool{
-	"severity":  true,
-	"priority":  true,
-	"level":     true,
-	"instance":  true,
-	"job":       true,
-	"team":      true,
-	"env":       true,
-	"service":   true,
-	"pod":       true,
-	"namespace": true,
-	"node":      true,
-	"container": true,
-	"cluster":   true,
-}
-
-func buildStreamLabels(data *internal.AlertGroup, extraLabels map[string]string) map[string]string {
-	streamLabels := make(map[string]string, len(extraLabels)+len(data.CommonLabels)+len(data.GroupLabels)+2)
+func (c *lokiClient) buildStreamLabels(data *internal.AlertGroup, extraLabels map[string]string) map[string]string {
+	streamLabels := make(map[string]string, len(extraLabels)+len(data.CommonLabels)+len(data.GroupLabels)+4)
 
 	for key, value := range extraLabels {
 		streamLabels[key] = value
 	}
 
 	for commonLabel, commonValue := range data.CommonLabels {
-		if allowedLabels[commonLabel] {
+		if c.allowedLabels[commonLabel] {
 			streamLabels[commonLabel] = commonValue
 		}
 	}
 
 	for groupLabel, groupValue := range data.GroupLabels {
-		if allowedLabels[groupLabel] {
+		if c.allowedLabels[groupLabel] {
 			streamLabels[groupLabel] = groupValue
 		}
 	}
