@@ -84,7 +84,7 @@ clean: ## Clean build artifacts
 
 .PHONY: docker-build
 docker-build: ## Build Docker image
-	docker build -t alertsnitch:local -f dockerfile .
+	docker build -t alertsnitch:local .
 
 .PHONY: docker-run
 docker-run: ## Run Docker container locally

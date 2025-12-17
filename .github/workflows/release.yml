@@ -26,6 +26,13 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Update Helm Chart appVersion
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          sed -i "s/^appVersion:.*/appVersion: \"$VERSION\"/" helm/alertsnitch/Chart.yaml
+          echo "Updated appVersion to $VERSION"
+          cat helm/alertsnitch/Chart.yaml
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -78,7 +85,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./dockerfile
+          file: ./Dockerfile
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -3,7 +3,7 @@ fullname: alertsnitch
 image:
   repository: mikehsu0618/alertsnitch
   pullPolicy: IfNotPresent
-  tag: "latest"
+  # tag: "" # Defaults to Chart.appVersion if not set
 
 service:
   type: ClusterIP
