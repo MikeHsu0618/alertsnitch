@@ -3,8 +3,20 @@ name: CI
 on:
   push:
     branches: [master, main]
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Dockerfile'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [master, main]
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Dockerfile'
+      - '.github/workflows/ci.yml'
 
 env:
   GO_VERSION: '1.25.5'
