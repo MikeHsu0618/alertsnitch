@@ -80,8 +80,8 @@ jobs:
 
       - name: Bootstrap MySQL
         run: |
-          mysql -h 127.0.0.1 -u root -pmysql alertsnitch < db.d/mysql/0.0.1-bootstrap.sql
-          mysql -h 127.0.0.1 -u root -pmysql alertsnitch < db.d/mysql/0.1.0-fingerprint.sql
+          mysql -h 127.0.0.1 -u root -pmysql alertsnitch < database/mysql/0.0.1-bootstrap.sql
+          mysql -h 127.0.0.1 -u root -pmysql alertsnitch < database/mysql/0.1.0-fingerprint.sql
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
@@ -116,8 +116,8 @@ jobs:
 
       - name: Bootstrap PostgreSQL
         run: |
-          PGPASSWORD=postgres psql -h 127.0.0.1 -U runner -d alertsnitch -f db.d/postgres/0.0.1-bootstrap.sql
-          PGPASSWORD=postgres psql -h 127.0.0.1 -U runner -d alertsnitch -f db.d/postgres/0.1.0-fingerprint.sql
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U runner -d alertsnitch -f database/postgres/0.0.1-bootstrap.sql
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U runner -d alertsnitch -f database/postgres/0.1.0-fingerprint.sql
 
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
