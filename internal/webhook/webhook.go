@@ -13,7 +13,7 @@ func Parse(payload []byte) (*internal.AlertGroup, error) {
 	d := internal.AlertGroup{}
 	err := json.Unmarshal(payload, &d)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode json webhook payload: %s", err)
+		return nil, fmt.Errorf("failed to decode json webhook payload: %w", err)
 	}
 	return &d, nil
 }

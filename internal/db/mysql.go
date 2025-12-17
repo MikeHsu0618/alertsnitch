@@ -27,7 +27,7 @@ func connectMySQL(args ConnectionArgs) (*MySQLDB, error) {
 
 	connection, err := sql.Open("mysql", args.DSN)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open MySQL connection: %s", err)
+		return nil, fmt.Errorf("failed to open MySQL connection: %w", err)
 	}
 
 	connection.SetMaxIdleConns(args.MaxIdleConns)
@@ -54,12 +54,12 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 			INSERT INTO AlertGroup (time, receiver, status, externalURL, groupKey)
 			VALUES (now(), ?, ?, ?, ?)`, data.Receiver, data.Status, data.ExternalURL, data.GroupKey)
 		if err != nil {
-			return fmt.Errorf("failed to insert into AlertGroups: %s", err)
+			return fmt.Errorf("failed to insert into AlertGroups: %w", err)
 		}
 
 		alertGroupID, err := r.LastInsertId() // alertGroupID
 		if err != nil {
-			return fmt.Errorf("failed to get AlertGroups inserted id: %s", err)
+			return fmt.Errorf("failed to get AlertGroups inserted id: %w", err)
 		}
 
 		for k, v := range data.GroupLabels {
@@ -67,7 +67,7 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 				INSERT INTO GroupLabel (alertGroupID, GroupLabel, Value)
 				VALUES (?, ?, ?)`, alertGroupID, k, v)
 			if err != nil {
-				return fmt.Errorf("failed to insert into GroupLabel: %s", err)
+				return fmt.Errorf("failed to insert into GroupLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonLabels {
@@ -75,7 +75,7 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 				INSERT INTO CommonLabel (alertGroupID, Label, Value)
 				VALUES (?, ?, ?)`, alertGroupID, k, v)
 			if err != nil {
-				return fmt.Errorf("failed to insert into CommonLabel: %s", err)
+				return fmt.Errorf("failed to insert into CommonLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonAnnotations {
@@ -83,7 +83,7 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 				INSERT INTO CommonAnnotation (alertGroupID, Annotation, Value)
 				VALUES (?, ?, ?)`, alertGroupID, k, v)
 			if err != nil {
-				return fmt.Errorf("failed to insert into CommonAnnotation: %s", err)
+				return fmt.Errorf("failed to insert into CommonAnnotation: %w", err)
 			}
 		}
 
@@ -101,12 +101,12 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 					alertGroupID, alert.Status, alert.StartsAt, alert.EndsAt, alert.GeneratorURL, alert.Fingerprint)
 			}
 			if err != nil {
-				return fmt.Errorf("failed to insert into Alert: %s", err)
+				return fmt.Errorf("failed to insert into Alert: %w", err)
 			}
 
 			alertID, err := result.LastInsertId()
 			if err != nil {
-				return fmt.Errorf("failed to get Alert inserted id: %s", err)
+				return fmt.Errorf("failed to get Alert inserted id: %w", err)
 			}
 
 			for k, v := range alert.Labels {
@@ -114,7 +114,7 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 					INSERT INTO AlertLabel (AlertID, Label, Value)
 					VALUES (?, ?, ?)`, alertID, k, v)
 				if err != nil {
-					return fmt.Errorf("failed to insert into AlertLabel: %s", err)
+					return fmt.Errorf("failed to insert into AlertLabel: %w", err)
 				}
 			}
 			for k, v := range alert.Annotations {
@@ -122,7 +122,7 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 					INSERT INTO AlertAnnotation (AlertID, Annotation, Value)
 					VALUES (?, ?, ?)`, alertID, k, v)
 				if err != nil {
-					return fmt.Errorf("failed to insert into AlertAnnotation: %s", err)
+					return fmt.Errorf("failed to insert into AlertAnnotation: %w", err)
 				}
 			}
 		}
@@ -134,7 +134,7 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 func (d MySQLDB) unitOfWork(f func(*sql.Tx) error) error {
 	tx, err := d.db.Begin()
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %s", err)
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	err = f(tx)
@@ -142,13 +142,13 @@ func (d MySQLDB) unitOfWork(f func(*sql.Tx) error) error {
 	if err != nil {
 		e := tx.Rollback()
 		if e != nil {
-			return fmt.Errorf("failed to rollback transaction (%s) after failing execution: %s", e, err)
+			return fmt.Errorf("failed to rollback transaction (%w) after failing execution: %w", e, err)
 		}
-		return fmt.Errorf("failed execution: %s", err)
+		return fmt.Errorf("failed execution: %w", err)
 	}
 	err = tx.Commit()
 	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %s", err)
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	return nil
 }
@@ -173,7 +173,7 @@ func (d MySQLDB) Ping() error {
 func (d MySQLDB) CheckModel() error {
 	rows, err := d.db.Query("SELECT version FROM Model")
 	if err != nil {
-		return fmt.Errorf("failed to fetch model version from the database: %s", err)
+		return fmt.Errorf("failed to fetch model version from the database: %w", err)
 	}
 	defer rows.Close()
 
@@ -183,7 +183,7 @@ func (d MySQLDB) CheckModel() error {
 
 	var model string
 	if err := rows.Scan(&model); err != nil {
-		return fmt.Errorf("failed to read model version from the database: %s", err)
+		return fmt.Errorf("failed to read model version from the database: %w", err)
 	}
 
 	if model != SupportedModel {

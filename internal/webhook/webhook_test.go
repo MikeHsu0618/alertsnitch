@@ -1,7 +1,7 @@
 package webhook_test
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func TestParsingPayloadWithInvalidPayloadFails(t *testing.T) {
 
 func TestParsingValidPayloadWorks(t *testing.T) {
 	a := assert.New(t)
-	b, err := ioutil.ReadFile("sample-payload.json")
+	b, err := os.ReadFile("sample-payload.json")
 
 	a.NoError(err)
 
@@ -35,7 +35,7 @@ func TestParsingValidPayloadWorks(t *testing.T) {
 
 func TestParsingValidPayloadWithoutEndsAtWorks(t *testing.T) {
 	a := assert.New(t)
-	b, err := ioutil.ReadFile("sample-payload-invalid-ends-at.json")
+	b, err := os.ReadFile("sample-payload-invalid-ends-at.json")
 
 	a.NoError(err)
 

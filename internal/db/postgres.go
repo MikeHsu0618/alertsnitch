@@ -27,7 +27,7 @@ func connectPG(args ConnectionArgs) (*PostgresDB, error) {
 
 	connection, err := sql.Open("postgres", args.DSN)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open Postgres connection: %s", err)
+		return nil, fmt.Errorf("failed to open Postgres connection: %w", err)
 	}
 
 	connection.SetMaxIdleConns(args.MaxIdleConns)
@@ -57,7 +57,7 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 		var alertGroupID int64
 		err := r.Scan(&alertGroupID)
 		if err != nil {
-			return fmt.Errorf("failed to insert into AlertGroups: %s", err)
+			return fmt.Errorf("failed to insert into AlertGroups: %w", err)
 		}
 
 		for k, v := range data.GroupLabels {
@@ -65,7 +65,7 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 				INSERT INTO GroupLabel (alertGroupID, GroupLabel, Value)
 				VALUES ($1, $2, $3)`, alertGroupID, k, v)
 			if err != nil {
-				return fmt.Errorf("failed to insert into GroupLabel: %s", err)
+				return fmt.Errorf("failed to insert into GroupLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonLabels {
@@ -73,7 +73,7 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 				INSERT INTO CommonLabel (alertGroupID, Label, Value)
 				VALUES ($1, $2, $3)`, alertGroupID, k, v)
 			if err != nil {
-				return fmt.Errorf("failed to insert into CommonLabel: %s", err)
+				return fmt.Errorf("failed to insert into CommonLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonAnnotations {
@@ -81,7 +81,7 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 				INSERT INTO CommonAnnotation (alertGroupID, Annotation, Value)
 				VALUES ($1, $2, $3)`, alertGroupID, k, v)
 			if err != nil {
-				return fmt.Errorf("failed to insert into CommonAnnotation: %s", err)
+				return fmt.Errorf("failed to insert into CommonAnnotation: %w", err)
 			}
 		}
 
@@ -99,7 +99,7 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 			}
 			var alertID int64
 			if err := r.Scan(&alertID); err != nil {
-				return fmt.Errorf("failed to insert into Alert: %s", err)
+				return fmt.Errorf("failed to insert into Alert: %w", err)
 			}
 
 			for k, v := range alert.Labels {
@@ -107,7 +107,7 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 					INSERT INTO AlertLabel (AlertID, Label, Value)
 					VALUES ($1, $2, $3)`, alertID, k, v)
 				if err != nil {
-					return fmt.Errorf("failed to insert into AlertLabel: %s", err)
+					return fmt.Errorf("failed to insert into AlertLabel: %w", err)
 				}
 			}
 			for k, v := range alert.Annotations {
@@ -115,7 +115,7 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 					INSERT INTO AlertAnnotation (AlertID, Annotation, Value)
 					VALUES ($1, $2, $3)`, alertID, k, v)
 				if err != nil {
-					return fmt.Errorf("failed to insert into AlertAnnotation: %s", err)
+					return fmt.Errorf("failed to insert into AlertAnnotation: %w", err)
 				}
 			}
 		}
@@ -127,7 +127,7 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 func (d PostgresDB) unitOfWork(f func(*sql.Tx) error) error {
 	tx, err := d.db.Begin()
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %s", err)
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	err = f(tx)
@@ -135,13 +135,13 @@ func (d PostgresDB) unitOfWork(f func(*sql.Tx) error) error {
 	if err != nil {
 		e := tx.Rollback()
 		if e != nil {
-			return fmt.Errorf("failed to rollback transaction (%s) after failing execution: %s", e, err)
+			return fmt.Errorf("failed to rollback transaction (%w) after failing execution: %w", e, err)
 		}
-		return fmt.Errorf("failed execution: %s", err)
+		return fmt.Errorf("failed execution: %w", err)
 	}
 	err = tx.Commit()
 	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %s", err)
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	return nil
 }
@@ -166,7 +166,7 @@ func (d PostgresDB) Ping() error {
 func (d PostgresDB) CheckModel() error {
 	rows, err := d.db.Query("SELECT version FROM Model")
 	if err != nil {
-		return fmt.Errorf("failed to fetch model version from the database: %s", err)
+		return fmt.Errorf("failed to fetch model version from the database: %w", err)
 	}
 	defer rows.Close()
 
@@ -176,7 +176,7 @@ func (d PostgresDB) CheckModel() error {
 
 	var model string
 	if err := rows.Scan(&model); err != nil {
-		return fmt.Errorf("failed to read model version from the database: %s", err)
+		return fmt.Errorf("failed to read model version from the database: %w", err)
 	}
 
 	if model != SupportedModel {

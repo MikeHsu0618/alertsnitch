@@ -81,5 +81,4 @@ func init() {
 
 	prometheus.MustRegister(WebhooksReceivedTotal)
 	prometheus.MustRegister(InvalidWebhooksTotal)
-
 }

@@ -207,7 +207,7 @@ func connectLoki(args ConnectionArgs) (*lokiClient, error) {
 
 	endpoint, err := url.Parse(args.DSN)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse Loki endpoint: %s", err)
+		return nil, fmt.Errorf("failed to parse Loki endpoint: %w", err)
 	}
 
 	batchConfig := BatchConfig{
@@ -516,7 +516,7 @@ func (c *lokiClient) getStreamKey(labels map[string]string) string {
 func (c *lokiClient) pushPayload(ctx context.Context, payload payload) error {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("error marshalling Loki request: %w", err)
+		return fmt.Errorf("error marshaling Loki request: %w", err)
 	}
 
 	// Compress payload with gzip
@@ -561,10 +561,9 @@ func (c *lokiClient) pushPayload(ctx context.Context, payload payload) error {
 		if len(byt) > 0 {
 			logrus.Errorf("Loki error response - Status: %d, Body: %s", res.StatusCode, string(byt))
 			return fmt.Errorf("Loki returned error (status: %d): %s", res.StatusCode, string(byt))
-		} else {
-			logrus.Errorf("Loki error response - Status: %d, Empty body", res.StatusCode)
-			return fmt.Errorf("Loki returned error with empty body (status: %d)", res.StatusCode)
 		}
+		logrus.Errorf("Loki error response - Status: %d, Empty body", res.StatusCode)
+		return fmt.Errorf("Loki returned error with empty body (status: %d)", res.StatusCode)
 	}
 
 	return nil
@@ -587,7 +586,7 @@ func (c *lokiClient) Ping() error {
 
 func (c *lokiClient) pingContext(ctx context.Context) error {
 	uri := c.cfg.Url.JoinPath(lokiAPIPath, "/labels")
-	req, err := http.NewRequestWithContext(ctx, "GET", uri.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", uri.String(), http.NoBody)
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
 	}
@@ -733,7 +732,7 @@ func createStreamForStatus(status string, alerts []internal.Alert, data *interna
 
 		jsonData, err := json.Marshal(flattenGroup)
 		if err != nil {
-			return stream{}, fmt.Errorf("error marshalling FlattenAlertGroup: %w", err)
+			return stream{}, fmt.Errorf("error marshaling FlattenAlertGroup: %w", err)
 		}
 
 		s.Values = append(s.Values, row{

@@ -1,9 +1,10 @@
+//go:build integration
 // +build integration
 
 package db_test
 
 import (
-	"io/ioutil"
+	"os"
 	"os"
 	"testing"
 
@@ -31,7 +32,7 @@ func TestPingingDatabaseWorks(t *testing.T) {
 func TestSavingAnAlertWorks(t *testing.T) {
 	a := assert.New(t)
 
-	b, err := ioutil.ReadFile("../webhook/sample-payload.json")
+	b, err := os.ReadFile("../webhook/sample-payload.json")
 	a.NoError(err)
 
 	data, err := webhook.Parse(b)
@@ -48,7 +49,7 @@ func TestSavingAnAlertWorks(t *testing.T) {
 func TestSavingAFiringAlertWorks(t *testing.T) {
 	a := assert.New(t)
 
-	b, err := ioutil.ReadFile("../webhook/sample-payload-invalid-ends-at.json")
+	b, err := os.ReadFile("../webhook/sample-payload-invalid-ends-at.json")
 	a.NoError(err)
 
 	data, err := webhook.Parse(b)

@@ -30,7 +30,7 @@ func Connect(backend string, args ConnectionArgs) (internal.Storer, error) {
 
 	case "loki":
 		return connectLoki(args)
-		
+
 	case "null":
 		return NullDB{}, nil
 

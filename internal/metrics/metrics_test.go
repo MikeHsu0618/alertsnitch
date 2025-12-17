@@ -23,5 +23,4 @@ func TestMetricsAreRegistered(t *testing.T) {
 		"webhooks received total")
 	a.True(prometheus.DefaultRegisterer.Unregister(metrics.AlertsSavingFailuresTotal),
 		"alerts failed to be saved")
-
 }

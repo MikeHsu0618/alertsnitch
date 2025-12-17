@@ -26,7 +26,7 @@ func WithQueryParameters(next http.Handler) http.Handler {
 
 		// 將 query parameters 存入 context
 		ctx := context.WithValue(r.Context(), RequestQueryKey, queryParams)
-		
+
 		// 使用新的 context 繼續請求
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
