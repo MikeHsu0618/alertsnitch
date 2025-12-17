@@ -2,6 +2,8 @@ module gitlab.com/yakshaving.art/alertsnitch
 
 go 1.25
 
+toolchain go1.25.5
+
 require (
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/gorilla/mux v1.8.1

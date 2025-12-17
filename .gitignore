@@ -1,9 +1,58 @@
-.idea
+# Binaries
+alertsnitch
+alertsnitch-*
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+coverage.out
+coverage.html
+*.coverprofile
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
 tmp*
-
+*.tmp
+*.log
 *.tar
 
-alertsnitch
+# Go workspace
+go.work
+go.work.sum
 
-coverage.out
+# Dependency directories
+vendor/
+
+# Build output
+dist/
+bin/
+
+# goreleaser
+dist/
+
+# Environment files (may contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Air (live reload)
+tmp/
+
+# Debug
+__debug_bin*
