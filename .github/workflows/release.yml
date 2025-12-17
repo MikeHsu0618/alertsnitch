@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  GO_VERSION: '1.25'
+  GO_VERSION: '1.25.5'
 
 permissions:
   contents: write
@@ -22,9 +22,11 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+        run: |
+          curl -LO https://go.dev/dl/go${{ env.GO_VERSION }}.linux-amd64.tar.gz
+          sudo rm -rf /usr/local/go
+          sudo tar -C /usr/local -xzf go${{ env.GO_VERSION }}.linux-amd64.tar.gz
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
 
       - name: Update Helm Chart appVersion
         run: |
