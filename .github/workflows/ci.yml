@@ -18,6 +18,11 @@ on:
       - 'Dockerfile'
       - '.github/workflows/ci.yml'
 
+# Cancel in-progress runs when a new run is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GO_VERSION: '1.25.5'
 
@@ -32,6 +37,7 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
+          cache: true
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
