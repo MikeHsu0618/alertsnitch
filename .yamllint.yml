@@ -1,0 +1,16 @@
+# yamllint configuration
+extends: default
+
+rules:
+  line-length:
+    max: 150
+    level: warning
+  truthy:
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
+  document-start: disable
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+

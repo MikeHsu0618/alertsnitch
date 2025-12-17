@@ -1,0 +1,125 @@
+# golangci-lint configuration
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    # Default linters
+    - errcheck      # Check for unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Go vet
+    - ineffassign   # Detect ineffectual assignments
+    - staticcheck   # Static analysis
+    - unused        # Check for unused code
+
+    # Additional useful linters
+    - bodyclose     # Check HTTP response body is closed
+    - dogsled       # Check for too many blank identifiers
+    - dupl          # Code clone detection
+    - errorlint     # Error wrapping issues
+    - copyloopvar   # Replaces deprecated exportloopref (Go 1.22+)
+    - gocognit      # Cognitive complexity
+    - goconst       # Find repeated strings that could be constants
+    - gocritic      # Opinionated linter
+    - gocyclo       # Cyclomatic complexity
+    - gofmt         # Check formatting
+    - goimports     # Check imports
+    - gosec         # Security issues
+    - misspell      # Spelling mistakes
+    - nakedret      # Naked returns
+    - nilerr        # Return nil error after checking error
+    - noctx         # HTTP request without context
+    - prealloc      # Suggest preallocations
+    - revive        # Fast, configurable linter
+    - unconvert     # Unnecessary type conversions
+    - unparam       # Unused function parameters
+    - whitespace    # Whitespace issues
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  
+  gocognit:
+    min-complexity: 20
+  
+  dupl:
+    threshold: 150
+  
+  goconst:
+    min-len: 5
+    min-occurrences: 5
+  
+  misspell:
+    locale: US
+  
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+    disabled-checks:
+      - whyNoLint
+      - ifElseChain    # if-else is often clearer than switch
+      - octalLiteral   # 0644 is widely understood
+  
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: increment-decrement
+      - name: var-naming
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - dupl
+        - gosec
+        - gocyclo
+        - gocognit
+        - errcheck
+        - goconst
+
+    # Exclude known false positives
+    - linters:
+        - gosec
+      text: "G104" # Unhandled error (often acceptable in deferred Close)
+
+    - linters:
+        - gosec
+      text: "G402" # TLS InsecureSkipVerify - intentional feature for testing
+
+    - linters:
+        - gocritic
+      text: "hugeParam"
+
+    # Allow high complexity in existing database save functions
+    - path: internal/db/(mysql|postgres|loki)\.go
+      linters:
+        - gocognit
+        - gocyclo
+
+    # Ignore Url vs URL naming (would require API breaking change)
+    - linters:
+        - revive
+      text: "var-naming.*Url"
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
