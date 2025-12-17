@@ -497,10 +497,10 @@ func TestLokiClient_Save(t *testing.T) {
 
 // TestLokiClient_BatchProcessing tests batch processing
 func TestLokiClient_BatchProcessing(t *testing.T) {
-	requestCount := 0
+	var requestCount atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/loki/api/v1/push" {
-			requestCount++
+			requestCount.Add(1)
 
 			// Verify request body (handle gzip)
 			body := readRequestBody(t, r)
@@ -537,7 +537,7 @@ func TestLokiClient_BatchProcessing(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	// Should only have one HTTP request (batch processing)
-	assert.Equal(t, 1, requestCount)
+	assert.Equal(t, int32(1), requestCount.Load())
 }
 
 // TestLokiClient_AuthHeaders tests authentication headers
