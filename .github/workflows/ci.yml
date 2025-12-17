@@ -189,7 +189,7 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: false  # Set to true after configuring GHCR permissions in repo settings
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
