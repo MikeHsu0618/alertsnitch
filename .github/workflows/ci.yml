@@ -189,8 +189,9 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          # Only push on push to master, not on PRs
-          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          # Disabled until GHCR permissions are properly configured
+          # To enable: push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
