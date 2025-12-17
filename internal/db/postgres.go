@@ -186,6 +186,14 @@ func (d PostgresDB) CheckModel() error {
 	return nil
 }
 
+// Close implements Storer interface
+func (d PostgresDB) Close() error {
+	if d.db != nil {
+		return d.db.Close()
+	}
+	return nil
+}
+
 func (PostgresDB) String() string {
 	return "postgres database driver"
 }

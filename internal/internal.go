@@ -13,6 +13,7 @@ type Storer interface {
 	Save(ctx context.Context, data *AlertGroup) error
 	Ping() error
 	CheckModel() error
+	Close() error
 }
 
 // AlertGroup is the data read from a webhook call

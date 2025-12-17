@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -40,6 +44,8 @@ type Args struct {
 	LokiBatchSize         int
 	LokiBatchFlushTimeout string
 	LokiBatchMaxRetries   int
+
+	LokiAllowedLabels string
 
 	Debug   bool
 	DryRun  bool
@@ -78,6 +84,8 @@ func main() {
 	flag.StringVar(&args.LokiBatchFlushTimeout, "loki-batch-flush-timeout", env.GetEnv("ALERTSNITCH_LOKI_BATCH_FLUSH_TIMEOUT", "5s"), "Loki batch flush timeout")
 	flag.IntVar(&args.LokiBatchMaxRetries, "loki-batch-max-retries", env.GetEnvAsInt("ALERTSNITCH_LOKI_BATCH_MAX_RETRIES", 3), "Loki batch max retries")
 
+	flag.StringVar(&args.LokiAllowedLabels, "loki-allowed-labels", env.GetEnv("ALERTSNITCH_LOKI_ALLOWED_LABELS", ""), "comma-separated list of labels to extract as stream labels (e.g., severity,priority,env)")
+
 	flag.Parse()
 
 	if args.Version {
@@ -97,6 +105,7 @@ func main() {
 		"tls_ca_cert_path":         args.LokiTLSCACertPath,
 		"tls_client_cert_path":     args.LokiTLSClientCertPath,
 		"tls_client_key_path":      args.LokiTLSClientKeyPath,
+		"allowed_labels":           args.LokiAllowedLabels,
 	}
 
 	if args.LokiBatchEnabled {
@@ -114,12 +123,36 @@ func main() {
 		Options:                options,
 	})
 	if err != nil {
-		fmt.Println("failed to connect to database:", err)
-		os.Exit(1)
+		logrus.Fatalf("failed to connect to database: %s", err)
 	}
+	defer func() {
+		if err := driver.Close(); err != nil {
+			logrus.Errorf("failed to close database connection: %s", err)
+		}
+	}()
 
-	fmt.Println("Connected to database")
+	logrus.Info("Connected to database")
 
 	s := server.New(driver, args.Debug)
-	s.Start(args.Address)
+
+	// Handle graceful shutdown
+	go func() {
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+		sig := <-sigCh
+		logrus.Infof("Received signal %s, initiating graceful shutdown...", sig)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		if err := s.Shutdown(ctx); err != nil {
+			logrus.Errorf("Server shutdown error: %s", err)
+		}
+	}()
+
+	if err := s.Start(args.Address); err != nil {
+		logrus.Fatalf("Server error: %s", err)
+	}
+
+	logrus.Info("Server stopped gracefully")
 }

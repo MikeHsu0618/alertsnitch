@@ -193,6 +193,14 @@ func (d MySQLDB) CheckModel() error {
 	return nil
 }
 
+// Close implements Storer interface
+func (d MySQLDB) Close() error {
+	if d.db != nil {
+		return d.db.Close()
+	}
+	return nil
+}
+
 func (MySQLDB) String() string {
 	return "mysql database driver"
 }

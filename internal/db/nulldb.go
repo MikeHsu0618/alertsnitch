@@ -2,8 +2,8 @@ package db
 
 import (
 	"context"
-	"log"
 
+	"github.com/sirupsen/logrus"
 	"gitlab.com/yakshaving.art/alertsnitch/internal"
 )
 
@@ -12,19 +12,24 @@ type NullDB struct{}
 
 // Save implements Storer interface
 func (NullDB) Save(ctx context.Context, data *internal.AlertGroup) error {
-	log.Printf("save alert %#v\n", data)
+	logrus.Debugf("save alert %#v", data)
 	return nil
 }
 
 // Ping implements Storer interface
 func (NullDB) Ping() error {
-	log.Println("pong")
+	logrus.Debug("pong")
 	return nil
 }
 
 // CheckModel implements Storer interface
 func (NullDB) CheckModel() error {
-	log.Println("check model")
+	logrus.Debug("check model")
+	return nil
+}
+
+// Close implements Storer interface
+func (NullDB) Close() error {
 	return nil
 }
 
