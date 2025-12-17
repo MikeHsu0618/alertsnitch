@@ -148,7 +148,7 @@ jobs:
             -o alertsnitch-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: alertsnitch-${{ matrix.goos }}-${{ matrix.goarch }}
           path: alertsnitch-${{ matrix.goos }}-${{ matrix.goarch }}
