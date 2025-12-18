@@ -1,7 +1,23 @@
+<p align="center">
+  <img src="assets/logo.png" alt="AlertSnitch Logo" width="200">
+</p>
+
+<h1 align="center">AlertSnitch</h1>
+
+<p align="center">
+  <strong>Capture and persist Prometheus AlertManager alerts for future analysis</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/mikehsu0618/alertsnitch/releases"><img src="https://img.shields.io/github/v/release/mikehsu0618/alertsnitch" alt="Release"></a>
+  <a href="https://github.com/mikehsu0618/alertsnitch/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mikehsu0618/alertsnitch" alt="License"></a>
+  <a href="https://goreportcard.com/report/github.com/mikehsu0618/alertsnitch"><img src="https://goreportcard.com/badge/github.com/mikehsu0618/alertsnitch" alt="Go Report Card"></a>
+</p>
+
+---
+
 > [!IMPORTANT]
 > This project is a fork of [yakshaving.art/alertsnitch](https://gitlab.com/yakshaving.art/alertsnitch) which was last updated in 2020. We've added Loki support while maintaining the original project's spirit of making alert history queryable.
-
-# AlertSnitch
 
 ## 🎬 Demo
 
