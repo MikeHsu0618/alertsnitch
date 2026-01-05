@@ -58,12 +58,67 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=https://github.com/MikeHsu0618/alertsnitch/raw/master/example/grafana/plugins/grafana-alertsnitch-app-1.0.0.zip;grafana-alertsnitch-app
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=grafana-alertsnitch-app
     volumes:
       - ./grafana/configs:/etc/grafana/provisioning
       - ./grafana/dashboards:/etc/grafana/dashboards
     profiles:
       - loki
       - mysql
+  holmesgpt:
+    image: mikehsu0618/holmesgpt:latest
+    container_name: holmesgpt
+    ports:
+      - "${HOLMES_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      - HOLMES_HOST=0.0.0.0
+      - HOLMES_PORT=8000
+      - LOKI_URL=http://loki:3100
+      - LOKI_TENANT_ID=fake
+      - CORS_ENABLED=true
+    volumes:
+      - ./holmesgpt/config.yaml:/app/config.yaml:ro
+      - ./examples:/app/examples:ro
+    entrypoint: ["python", "server.py"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - loki
+
+  holmesgpt-agui:
+    image: mikehsu0618/holmesgpt:latest
+    container_name: holmesgpt-agui
+    ports:
+      - "${HOLMES_AGUI_PORT:-5050}:5050"
+    env_file:
+      - .env
+    environment:
+      - HOLMES_HOST=0.0.0.0
+      - HOLMES_PORT=5050
+      - LOKI_URL=http://loki:3100
+      - LOKI_TENANT_ID=fake
+      - CORS_ENABLED=true
+    volumes:
+      - ./holmesgpt/config.yaml:/app/config.yaml:ro
+      - ./examples:/app/examples:ro
+    entrypoint: ["python", "experimental/ag-ui/server-agui.py"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5050/api/agui/chat/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - loki
 
   prometheus:
     image: prom/prometheus:v3.8.1

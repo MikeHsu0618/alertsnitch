@@ -48,6 +48,7 @@ dist/
 
 # Environment files (may contain secrets)
 .env
+./example/.env
 .env.local
 .env.*.local
 

@@ -23,8 +23,8 @@
 
 Check out AlertSnitch in action with our custom Grafana plugin and HolmesGPT AI integration:
 
-<a href="https://drive.google.com/file/d/145B_BvAXb9c1mBILeN10YQtHkaI0gh_U/view?usp=sharing">
-  <img src="assets/AlertLLM.jpg" alt="AlertSnitch Demo - Click to watch video" width="800">
+<a href="https://drive.google.com/file/d/11w0o58k6tYlBFYr_dqn1GmTm6jLuSxv4/view?usp=sharing">
+  <img src="assets/alertsnitch.png" alt="AlertSnitch Demo - Click to watch video" width="800">
 </a>
 
 > 🎥 **Click the image above to watch the demo video**
