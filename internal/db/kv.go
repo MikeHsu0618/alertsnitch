@@ -51,3 +51,57 @@ func mysqlGetAnnotationKVID(tx *sql.Tx, k, v string) (int64, error) {
 	err := tx.QueryRow(`SELECT ID FROM AnnotationKV WHERE KvHash = ?`, h).Scan(&id)
 	return id, err
 }
+
+func postgresGetReceiverID(tx *sql.Tx, receiver string) (int64, error) {
+	var id int64
+	err := tx.QueryRow(`
+		INSERT INTO AlertGroupReceiver (Receiver) VALUES ($1)
+		ON CONFLICT (Receiver) DO UPDATE SET Receiver = AlertGroupReceiver.Receiver
+		RETURNING ID`, receiver).Scan(&id)
+	return id, err
+}
+
+func postgresGetExternalURLID(tx *sql.Tx, externalURL string) (int64, error) {
+	var id int64
+	err := tx.QueryRow(`
+		INSERT INTO AlertGroupExternalURL (ExternalURL) VALUES ($1)
+		ON CONFLICT (ExternalURL) DO UPDATE SET ExternalURL = AlertGroupExternalURL.ExternalURL
+		RETURNING ID`, externalURL).Scan(&id)
+	return id, err
+}
+
+func postgresGetKeyID(tx *sql.Tx, groupKey string) (int64, error) {
+	var id int64
+	err := tx.QueryRow(`
+		INSERT INTO AlertGroupKey (GroupKey) VALUES ($1)
+		ON CONFLICT (GroupKey) DO UPDATE SET GroupKey = AlertGroupKey.GroupKey
+		RETURNING ID`, groupKey).Scan(&id)
+	return id, err
+}
+
+func mysqlGetReceiverID(tx *sql.Tx, receiver string) (int64, error) {
+	if _, err := tx.Exec(`INSERT IGNORE INTO AlertGroupReceiver (Receiver) VALUES (?)`, receiver); err != nil {
+		return 0, err
+	}
+	var id int64
+	err := tx.QueryRow(`SELECT ID FROM AlertGroupReceiver WHERE Receiver = ?`, receiver).Scan(&id)
+	return id, err
+}
+
+func mysqlGetExternalURLID(tx *sql.Tx, externalURL string) (int64, error) {
+	if _, err := tx.Exec(`INSERT IGNORE INTO AlertGroupExternalURL (ExternalURL) VALUES (?)`, externalURL); err != nil {
+		return 0, err
+	}
+	var id int64
+	err := tx.QueryRow(`SELECT ID FROM AlertGroupExternalURL WHERE ExternalURL = ?`, externalURL).Scan(&id)
+	return id, err
+}
+
+func mysqlGetKeyID(tx *sql.Tx, groupKey string) (int64, error) {
+	if _, err := tx.Exec(`INSERT IGNORE INTO AlertGroupKey (GroupKey) VALUES (?)`, groupKey); err != nil {
+		return 0, err
+	}
+	var id int64
+	err := tx.QueryRow(`SELECT ID FROM AlertGroupKey WHERE GroupKey = ?`, groupKey).Scan(&id)
+	return id, err
+}

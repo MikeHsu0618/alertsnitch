@@ -50,12 +50,26 @@ func connectPG(args ConnectionArgs) (*PostgresDB, error) {
 // Save implements Storer interface
 func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 	return d.unitOfWork(func(tx *sql.Tx) error {
+		receiverID, err := postgresGetReceiverID(tx, data.Receiver)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupReceiver: %w", err)
+		}
+		externalURLID, err := postgresGetExternalURLID(tx, data.ExternalURL)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupExternalURL: %w", err)
+		}
+		groupKeyID, err := postgresGetKeyID(tx, data.GroupKey)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupKey: %w", err)
+		}
+
 		r := tx.QueryRow(`
-			INSERT INTO AlertGroup (time, receiver, status, externalURL, groupKey)
-			VALUES (current_timestamp, $1, $2, $3, $4) RETURNING ID`, data.Receiver, data.Status, data.ExternalURL, data.GroupKey)
+			INSERT INTO AlertGroup (time, status, ReceiverID, ExternalURLID, KeyID)
+			VALUES (current_timestamp, $1, $2, $3, $4) RETURNING ID`,
+			data.Status, receiverID, externalURLID, groupKeyID)
 
 		var alertGroupID int64
-		err := r.Scan(&alertGroupID)
+		err = r.Scan(&alertGroupID)
 		if err != nil {
 			return fmt.Errorf("failed to insert into AlertGroups: %w", err)
 		}

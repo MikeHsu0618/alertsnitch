@@ -12,4 +12,7 @@ psql -h "postgres" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -f postgres/0.1.0-f
 echo "Applying label/annotation KV deduplication"
 psql -h "postgres" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -f postgres/0.2.0-labelkv.sql
 
+echo "Applying AlertGroup receiver/externalURL/groupKey KV lookup"
+psql -h "postgres" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -f postgres/0.3.0-alertgroup-kv.sql
+
 echo "Done creating model"
