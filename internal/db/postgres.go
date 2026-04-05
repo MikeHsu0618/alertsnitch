@@ -61,25 +61,37 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 		}
 
 		for k, v := range data.GroupLabels {
-			_, err := tx.Exec(`
-				INSERT INTO GroupLabel (alertGroupID, GroupLabel, Value)
-				VALUES ($1, $2, $3)`, alertGroupID, k, v)
+			kvID, err := postgresGetLabelKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve GroupLabel LabelKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO GroupLabel (alertGroupID, LabelKVID)
+				VALUES ($1, $2)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into GroupLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonLabels {
-			_, err := tx.Exec(`
-				INSERT INTO CommonLabel (alertGroupID, Label, Value)
-				VALUES ($1, $2, $3)`, alertGroupID, k, v)
+			kvID, err := postgresGetLabelKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve CommonLabel LabelKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO CommonLabel (alertGroupID, LabelKVID)
+				VALUES ($1, $2)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into CommonLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonAnnotations {
-			_, err := tx.Exec(`
-				INSERT INTO CommonAnnotation (alertGroupID, Annotation, Value)
-				VALUES ($1, $2, $3)`, alertGroupID, k, v)
+			kvID, err := postgresGetAnnotationKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve CommonAnnotation AnnotationKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO CommonAnnotation (alertGroupID, AnnotationKVID)
+				VALUES ($1, $2)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into CommonAnnotation: %w", err)
 			}
@@ -103,17 +115,25 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 			}
 
 			for k, v := range alert.Labels {
-				_, err := tx.Exec(`
-					INSERT INTO AlertLabel (AlertID, Label, Value)
-					VALUES ($1, $2, $3)`, alertID, k, v)
+				kvID, err := postgresGetLabelKVID(tx, k, v)
+				if err != nil {
+					return fmt.Errorf("failed to resolve AlertLabel LabelKV: %w", err)
+				}
+				_, err = tx.Exec(`
+					INSERT INTO AlertLabel (AlertID, LabelKVID)
+					VALUES ($1, $2)`, alertID, kvID)
 				if err != nil {
 					return fmt.Errorf("failed to insert into AlertLabel: %w", err)
 				}
 			}
 			for k, v := range alert.Annotations {
-				_, err := tx.Exec(`
-					INSERT INTO AlertAnnotation (AlertID, Annotation, Value)
-					VALUES ($1, $2, $3)`, alertID, k, v)
+				kvID, err := postgresGetAnnotationKVID(tx, k, v)
+				if err != nil {
+					return fmt.Errorf("failed to resolve AlertAnnotation AnnotationKV: %w", err)
+				}
+				_, err = tx.Exec(`
+					INSERT INTO AlertAnnotation (AlertID, AnnotationKVID)
+					VALUES ($1, $2)`, alertID, kvID)
 				if err != nil {
 					return fmt.Errorf("failed to insert into AlertAnnotation: %w", err)
 				}
