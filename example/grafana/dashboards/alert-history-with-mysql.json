@@ -353,7 +353,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"firing\"\n\t)\n\tAND Label=\"severity\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"severity\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"firing\"\n\t)\n\tAND lkv.LabelKey=\"severity\"",
           "refId": "D",
           "select": [
             [
@@ -708,7 +708,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"severity\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"severity\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND lkv.LabelKey=\"severity\"",
           "refId": "D",
           "select": [
             [
@@ -1277,7 +1277,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"alertname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"alertname\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"alertname\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"alertname\"",
           "refId": "B",
           "select": [
             [
@@ -1310,7 +1310,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"env\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"env\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"env\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"env\"",
           "refId": "C",
           "select": [
             [
@@ -1343,7 +1343,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"severity\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"severity\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"severity\"",
           "refId": "D",
           "select": [
             [
@@ -1376,7 +1376,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"az\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"az\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"az\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"az\"",
           "refId": "E",
           "select": [
             [
@@ -1409,7 +1409,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"hostname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"hostname\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"hostname\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"hostname\"",
           "refId": "F",
           "select": [
             [
@@ -1442,7 +1442,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"project\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"project\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"project\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"project\"",
           "refId": "G",
           "select": [
             [
@@ -1475,7 +1475,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"description\"\nFROM\n\tAlertAnnotation\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Annotation=\"description\"",
+          "rawSql": "SELECT\n\taa.AlertID AS \"ID\",\n\takv.Value AS \"description\"\nFROM\n\tAlertAnnotation aa\n\tINNER JOIN AnnotationKV akv ON aa.AnnotationKVID = akv.ID\nWHERE\n\taa.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND akv.AnnotationKey=\"description\"",
           "refId": "H",
           "select": [
             [
@@ -1790,7 +1790,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"alertname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"alertname\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"alertname\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND lkv.LabelKey=\"alertname\"",
           "refId": "B",
           "select": [
             [
@@ -1823,7 +1823,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"env\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"env\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"env\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND lkv.LabelKey=\"env\"",
           "refId": "C",
           "select": [
             [
@@ -1856,7 +1856,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"severity\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"severity\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND lkv.LabelKey=\"severity\"",
           "refId": "D",
           "select": [
             [
@@ -1889,7 +1889,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"az\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"az\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"az\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND lkv.LabelKey=\"az\"",
           "refId": "E",
           "select": [
             [
@@ -1922,7 +1922,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"hostname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"hostname\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"hostname\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND lkv.LabelKey=\"hostname\"",
           "refId": "F",
           "select": [
             [
@@ -1955,7 +1955,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"project\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Label=\"project\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"project\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND lkv.LabelKey=\"project\"",
           "refId": "G",
           "select": [
             [
@@ -1988,7 +1988,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"description\"\nFROM\n\tAlertAnnotation\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND Annotation=\"description\"",
+          "rawSql": "SELECT\n\taa.AlertID AS \"ID\",\n\takv.Value AS \"description\"\nFROM\n\tAlertAnnotation aa\n\tINNER JOIN AnnotationKV akv ON aa.AnnotationKVID = akv.ID\nWHERE\n\taa.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t  AND status=\"resolved\"\n\t)\n\tAND akv.AnnotationKey=\"description\"",
           "refId": "H",
           "select": [
             [
@@ -2225,7 +2225,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"alertname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"alertname\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"alertname\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"alertname\"",
           "refId": "B",
           "select": [
             [
@@ -2258,7 +2258,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"env\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"env\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"env\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"env\"",
           "refId": "C",
           "select": [
             [
@@ -2291,7 +2291,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"severity\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"severity\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"severity\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"severity\"",
           "refId": "D",
           "select": [
             [
@@ -2324,7 +2324,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"az\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"az\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"az\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"az\"",
           "refId": "E",
           "select": [
             [
@@ -2357,7 +2357,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"hostname\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"hostname\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"hostname\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"hostname\"",
           "refId": "F",
           "select": [
             [
@@ -2390,7 +2390,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"project\"\nFROM\n\tAlertLabel\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Label=\"project\"",
+          "rawSql": "SELECT\n\tal.AlertID AS \"ID\",\n\tlkv.Value AS \"project\"\nFROM\n\tAlertLabel al\n\tINNER JOIN LabelKV lkv ON al.LabelKVID = lkv.ID\nWHERE\n\tal.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND lkv.LabelKey=\"project\"",
           "refId": "G",
           "select": [
             [
@@ -2423,7 +2423,7 @@
           "hide": false,
           "metricColumn": "none",
           "rawQuery": true,
-          "rawSql": "SELECT\n\tAlertID AS \"ID\",\n\tValue AS \"description\"\nFROM\n\tAlertAnnotation\nWHERE\n\tAlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND Annotation=\"description\"",
+          "rawSql": "SELECT\n\taa.AlertID AS \"ID\",\n\takv.Value AS \"description\"\nFROM\n\tAlertAnnotation aa\n\tINNER JOIN AnnotationKV akv ON aa.AnnotationKVID = akv.ID\nWHERE\n\taa.AlertID IN (\n\tSELECT\n\t\tID \n\tFROM\n\t\tAlert \n\tWHERE\n\t  startsAt BETWEEN DATE_SUB(FROM_UNIXTIME(${__from:date:seconds}),INTERVAL 8 HOUR) AND DATE_SUB(FROM_UNIXTIME(${__to:date:seconds}),INTERVAL 8 HOUR)\n\t)\n\tAND akv.AnnotationKey=\"description\"",
           "refId": "H",
           "select": [
             [

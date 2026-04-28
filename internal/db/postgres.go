@@ -50,36 +50,62 @@ func connectPG(args ConnectionArgs) (*PostgresDB, error) {
 // Save implements Storer interface
 func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 	return d.unitOfWork(func(tx *sql.Tx) error {
+		receiverID, err := postgresGetReceiverID(tx, data.Receiver)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupReceiver: %w", err)
+		}
+		externalURLID, err := postgresGetExternalURLID(tx, data.ExternalURL)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupExternalURL: %w", err)
+		}
+		groupKeyID, err := postgresGetKeyID(tx, data.GroupKey)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupKey: %w", err)
+		}
+
 		r := tx.QueryRow(`
-			INSERT INTO AlertGroup (time, receiver, status, externalURL, groupKey)
-			VALUES (current_timestamp, $1, $2, $3, $4) RETURNING ID`, data.Receiver, data.Status, data.ExternalURL, data.GroupKey)
+			INSERT INTO AlertGroup (time, status, ReceiverID, ExternalURLID, KeyID)
+			VALUES (current_timestamp, $1, $2, $3, $4) RETURNING ID`,
+			data.Status, receiverID, externalURLID, groupKeyID)
 
 		var alertGroupID int64
-		err := r.Scan(&alertGroupID)
+		err = r.Scan(&alertGroupID)
 		if err != nil {
 			return fmt.Errorf("failed to insert into AlertGroups: %w", err)
 		}
 
 		for k, v := range data.GroupLabels {
-			_, err := tx.Exec(`
-				INSERT INTO GroupLabel (alertGroupID, GroupLabel, Value)
-				VALUES ($1, $2, $3)`, alertGroupID, k, v)
+			kvID, err := postgresGetLabelKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve GroupLabel LabelKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO GroupLabel (alertGroupID, LabelKVID)
+				VALUES ($1, $2)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into GroupLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonLabels {
-			_, err := tx.Exec(`
-				INSERT INTO CommonLabel (alertGroupID, Label, Value)
-				VALUES ($1, $2, $3)`, alertGroupID, k, v)
+			kvID, err := postgresGetLabelKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve CommonLabel LabelKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO CommonLabel (alertGroupID, LabelKVID)
+				VALUES ($1, $2)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into CommonLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonAnnotations {
-			_, err := tx.Exec(`
-				INSERT INTO CommonAnnotation (alertGroupID, Annotation, Value)
-				VALUES ($1, $2, $3)`, alertGroupID, k, v)
+			kvID, err := postgresGetAnnotationKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve CommonAnnotation AnnotationKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO CommonAnnotation (alertGroupID, AnnotationKVID)
+				VALUES ($1, $2)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into CommonAnnotation: %w", err)
 			}
@@ -103,17 +129,25 @@ func (d PostgresDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 			}
 
 			for k, v := range alert.Labels {
-				_, err := tx.Exec(`
-					INSERT INTO AlertLabel (AlertID, Label, Value)
-					VALUES ($1, $2, $3)`, alertID, k, v)
+				kvID, err := postgresGetLabelKVID(tx, k, v)
+				if err != nil {
+					return fmt.Errorf("failed to resolve AlertLabel LabelKV: %w", err)
+				}
+				_, err = tx.Exec(`
+					INSERT INTO AlertLabel (AlertID, LabelKVID)
+					VALUES ($1, $2)`, alertID, kvID)
 				if err != nil {
 					return fmt.Errorf("failed to insert into AlertLabel: %w", err)
 				}
 			}
 			for k, v := range alert.Annotations {
-				_, err := tx.Exec(`
-					INSERT INTO AlertAnnotation (AlertID, Annotation, Value)
-					VALUES ($1, $2, $3)`, alertID, k, v)
+				kvID, err := postgresGetAnnotationKVID(tx, k, v)
+				if err != nil {
+					return fmt.Errorf("failed to resolve AlertAnnotation AnnotationKV: %w", err)
+				}
+				_, err = tx.Exec(`
+					INSERT INTO AlertAnnotation (AlertID, AnnotationKVID)
+					VALUES ($1, $2)`, alertID, kvID)
 				if err != nil {
 					return fmt.Errorf("failed to insert into AlertAnnotation: %w", err)
 				}

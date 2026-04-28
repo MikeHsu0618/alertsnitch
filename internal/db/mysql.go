@@ -50,9 +50,22 @@ func connectMySQL(args ConnectionArgs) (*MySQLDB, error) {
 // Save implements Storer interface
 func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 	return d.unitOfWork(func(tx *sql.Tx) error {
+		receiverID, err := mysqlGetReceiverID(tx, data.Receiver)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupReceiver: %w", err)
+		}
+		externalURLID, err := mysqlGetExternalURLID(tx, data.ExternalURL)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupExternalURL: %w", err)
+		}
+		groupKeyID, err := mysqlGetKeyID(tx, data.GroupKey)
+		if err != nil {
+			return fmt.Errorf("failed to resolve AlertGroup AlertGroupKey: %w", err)
+		}
+
 		r, err := tx.Exec(`
-			INSERT INTO AlertGroup (time, receiver, status, externalURL, groupKey)
-			VALUES (now(), ?, ?, ?, ?)`, data.Receiver, data.Status, data.ExternalURL, data.GroupKey)
+			INSERT INTO AlertGroup (time, status, ReceiverID, ExternalURLID, KeyID)
+			VALUES (now(), ?, ?, ?, ?)`, data.Status, receiverID, externalURLID, groupKeyID)
 		if err != nil {
 			return fmt.Errorf("failed to insert into AlertGroups: %w", err)
 		}
@@ -63,25 +76,37 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 		}
 
 		for k, v := range data.GroupLabels {
-			_, err := tx.Exec(`
-				INSERT INTO GroupLabel (alertGroupID, GroupLabel, Value)
-				VALUES (?, ?, ?)`, alertGroupID, k, v)
+			kvID, err := mysqlGetLabelKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve GroupLabel LabelKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO GroupLabel (alertGroupID, LabelKVID)
+				VALUES (?, ?)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into GroupLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonLabels {
-			_, err := tx.Exec(`
-				INSERT INTO CommonLabel (alertGroupID, Label, Value)
-				VALUES (?, ?, ?)`, alertGroupID, k, v)
+			kvID, err := mysqlGetLabelKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve CommonLabel LabelKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO CommonLabel (alertGroupID, LabelKVID)
+				VALUES (?, ?)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into CommonLabel: %w", err)
 			}
 		}
 		for k, v := range data.CommonAnnotations {
-			_, err := tx.Exec(`
-				INSERT INTO CommonAnnotation (alertGroupID, Annotation, Value)
-				VALUES (?, ?, ?)`, alertGroupID, k, v)
+			kvID, err := mysqlGetAnnotationKVID(tx, k, v)
+			if err != nil {
+				return fmt.Errorf("failed to resolve CommonAnnotation AnnotationKV: %w", err)
+			}
+			_, err = tx.Exec(`
+				INSERT INTO CommonAnnotation (alertGroupID, AnnotationKVID)
+				VALUES (?, ?)`, alertGroupID, kvID)
 			if err != nil {
 				return fmt.Errorf("failed to insert into CommonAnnotation: %w", err)
 			}
@@ -110,17 +135,25 @@ func (d MySQLDB) Save(ctx context.Context, data *internal.AlertGroup) error {
 			}
 
 			for k, v := range alert.Labels {
-				_, err := tx.Exec(`
-					INSERT INTO AlertLabel (AlertID, Label, Value)
-					VALUES (?, ?, ?)`, alertID, k, v)
+				kvID, err := mysqlGetLabelKVID(tx, k, v)
+				if err != nil {
+					return fmt.Errorf("failed to resolve AlertLabel LabelKV: %w", err)
+				}
+				_, err = tx.Exec(`
+					INSERT INTO AlertLabel (AlertID, LabelKVID)
+					VALUES (?, ?)`, alertID, kvID)
 				if err != nil {
 					return fmt.Errorf("failed to insert into AlertLabel: %w", err)
 				}
 			}
 			for k, v := range alert.Annotations {
-				_, err := tx.Exec(`
-					INSERT INTO AlertAnnotation (AlertID, Annotation, Value)
-					VALUES (?, ?, ?)`, alertID, k, v)
+				kvID, err := mysqlGetAnnotationKVID(tx, k, v)
+				if err != nil {
+					return fmt.Errorf("failed to resolve AlertAnnotation AnnotationKV: %w", err)
+				}
+				_, err = tx.Exec(`
+					INSERT INTO AlertAnnotation (AlertID, AnnotationKVID)
+					VALUES (?, ?)`, alertID, kvID)
 				if err != nil {
 					return fmt.Errorf("failed to insert into AlertAnnotation: %w", err)
 				}
