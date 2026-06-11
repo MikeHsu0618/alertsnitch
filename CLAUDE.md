@@ -11,9 +11,8 @@ last updated 2020); the main addition in this fork is the **Loki backend** plus 
 tooling. The longer-term goal (see `TODO-AI-RCA-ROADMAP.md`) is to feed this alert history into
 HolmesGPT for AI root-cause analysis surfaced through a Grafana plugin — that work is not yet implemented.
 
-> Note: the Go module path is still `gitlab.com/yakshaving.art/alertsnitch` even though the repo
-> lives at `github.com/mikehsu0618/alertsnitch`. All internal imports and `-ldflags` version paths
-> use the gitlab path — keep using it when adding code; do not "fix" it piecemeal.
+The module path is `github.com/mikehsu0618/alertsnitch` (matching the repo). The upstream attribution
+in the README is historical only.
 
 ## Commands
 
@@ -39,53 +38,64 @@ The SQL backends (`internal/db/{mysql,postgres}.go`) only have meaningful covera
 database is reachable. CI spins up MySQL 8.0 and Postgres 15 service containers, bootstraps them
 with both SQL files, and sets `ALERTSNITCH_BACKEND` + `ALERTSNITCH_BACKEND_ENDPOINT` (see
 `.github/workflows/ci.yml`). To replicate locally, run a DB, apply both files in
-`database/<engine>/` in order (`0.0.1-bootstrap.sql` then `0.1.0-fingerprint.sql`), then export
-the same env vars before `go test ./internal/db`.
+`database/<engine>/` in order (`0.0.1-bootstrap.sql` then `0.1.0-fingerprint.sql`), then
+`make integration` (or `go test -tags integration ./internal/storage/`) with those env vars set.
 
 ## Architecture
 
-Request flow: **AlertManager → `POST /webhook` → `webhook.Parse` → `Storer.Save`**.
+Request flow: **AlertManager → `POST /webhook` → `webhook.Parse` → `Storer.Save(ctx, group, extraLabels)`**.
 
-- `main.go` — wires everything: parses flags (each flag mirrors an `ALERTSNITCH_*` env var via
-  `pkg/env`), builds an `Options map[string]string` of Loki settings, calls `db.Connect`, starts
-  the server, and handles SIGINT/SIGTERM graceful shutdown.
-- `internal/internal.go` — the central contracts. `Storer` is the backend interface
-  (`Save / Ping / CheckModel / Close`); `AlertGroup`/`Alert` is the parsed webhook payload;
-  `FlattenAlertGroup` is one alert denormalized with its group context (this is what gets written
-  to Loki as a JSON log line).
-- `internal/db/db.go` — `Connect(backend, args)` is the factory that switches on backend name and
-  returns a `Storer`. **To add a backend, implement `Storer` and add a case here.** `SupportedModel`
-  ("0.1.0") is the schema version the SQL backends check via `CheckModel`.
-- `internal/server/server.go` — gorilla/mux router. Routes: `/webhook` (POST), `/-/ready`,
-  `/-/health`, `/metrics`. `SupportedWebhookVersion` ("4") is enforced — payloads of other versions
-  are rejected 400. Every stage increments a Prometheus counter from `internal/metrics`.
-- `internal/middleware/context.go` — `WithQueryParameters` stuffs the request's URL query params
-  into the context; the Loki backend reads them back via `middleware.GetQueryParameters` to use as
-  extra stream labels (e.g. `/webhook?source=alertmanager`).
-- `internal/webhook/webhook.go` — parses + validates the raw JSON body into an `AlertGroup`.
+The storage layer is deliberately decoupled from HTTP and metrics concerns. The dependency
+direction is one-way: `internal` (leaf: domain model + interfaces) ← `internal/storage/*` (backends)
+← `internal/storage` (registry) ← `main`. The server depends on `internal` + `internal/storage`.
 
-### Loki backend (`internal/db/loki.go`, the most substantial file)
+- `internal/internal.go` — the central contracts (this is the leaf package everything imports).
+  `Storer` is the minimal backend interface: `Save(ctx, *AlertGroup, extraLabels) error` and
+  `Close(ctx) error`. `HealthChecker` (`CheckHealth(ctx) Health`) is **optional** — the server
+  type-asserts it; a backend without it is treated as always ready. `AlertGroup`/`Alert` is the
+  parsed webhook payload.
+- `internal/storage/storage.go` — the backend **registry**. `Connect(Config)` looks up a `Factory`
+  by name. **To add a backend: implement `internal.Storer` in a subpackage and `Register("name", …)`
+  (or add it to the `registry` map).** No other package changes — this is the extensibility seam.
+  `Config` aggregates the typed per-backend configs (`sqlstore.Config`, `loki.Config`); only the one
+  matching `Backend` is consulted (no stringly-typed `map[string]string`).
+- `internal/storage/sqlstore/` — MySQL + Postgres. They share connect / transaction / model-check /
+  health / close via the embedded `base`; only the dialect-specific INSERTs differ (`?` vs `$N`,
+  `LastInsertId` vs `RETURNING`). `SupportedModel` ("0.1.0") is checked in `CheckHealth`.
+- `internal/storage/loki/` — the Loki backend, split by concern: `config` (typed config + validation
+  + TLS), `encoding` (wire types + `FlattenAlertGroup`), `stream` (label allow-list + stream
+  construction), `transport` (gzip push + health ping), `batch` (async processor), `client` (the
+  `Client` type). See below.
+- `internal/storage/null/` — no-op backend for debugging the webhook path.
+- `internal/server/server.go` — gorilla/mux router (`/webhook`, `/-/ready`, `/-/health`, `/metrics`).
+  `SupportedWebhookVersion` ("4") is enforced (else 400). The handler extracts query params
+  (`/webhook?source=alertmanager`) via `queryLabels` and passes them as `extraLabels` — the storage
+  layer never touches HTTP. The probe handlers own the `DatabaseUp` gauge, set from `CheckHealth`.
+- `main.go` — `parseArgs` (each flag mirrors an `ALERTSNITCH_*` env var via `pkg/env`) → `buildConfig`
+  (typed; invalid values like a bad batch-flush duration error at startup) → `storage.Connect` →
+  serve. Graceful shutdown drains the server **and** `driver.Close(ctx)` within one 30s deadline.
 
-This is where most fork-specific complexity lives. Key concepts:
+### Loki backend specifics
 
-- **Stream labels**: alerts become Loki streams. Only labels in an allowlist
-  (`allowedLabels`, defaulting to severity/namespace/pod/etc., overridable via
-  `ALERTSNITCH_LOKI_ALLOWED_LABELS`) plus query-param labels are promoted to stream labels;
-  everything else stays in the JSON log line. Alerts are split into one stream per `alert_status`.
-- **Timestamps** use the alert's real `StartsAt`/`EndsAt`, not `time.Now()`, so history is accurate.
-- **Batch mode** (`ALERTSNITCH_LOKI_BATCH_ENABLED`): `Save` enqueues onto `alertCh`; a background
-  `processBatches` goroutine merges streams by label key, gzip-compresses, and pushes with retry +
-  backoff. When the channel is full, `Save` drops the alert and returns an error. `Close` drains.
-- Config is validated up front (`LokiConfig.Validate` and friends) covering URL scheme, timeout
-  bounds, paired basic-auth, and paired client cert/key. TLS/mTLS, multi-tenancy
-  (`X-Scope-OrgID`), and `HTTP(S)_PROXY` are all supported.
+- **Stream labels**: only labels in an allow-list (`defaultAllowedLabels`, overridable via
+  `ALERTSNITCH_LOKI_ALLOWED_LABELS`) plus the query-param `extraLabels` become stream labels;
+  everything else stays in the JSON log line. One stream per `alert_status`.
+- **Timestamps** use the alert's real `StartsAt`/`EndsAt`, not `time.Now()`.
+- **Batch mode** (`ALERTSNITCH_LOKI_BATCH_ENABLED`): `accumulate` drains the queue into batches and a
+  separate `flusher` goroutine ships them with retries — so retry backoff never blocks accumulation.
+  `Close(ctx)` drains buffered alerts within the deadline.
+- **Persistence metrics**: the backend records `saved_total`/`saving_failures_total` at the *real*
+  point of durability (synchronously, or at batch-flush resolution). Queue-full drops count as
+  failures. The server does **not** double-count these — it owns only received/invalid + the gauge.
+  (This is the one deliberate, documented place storage touches `internal/metrics`.)
 
 ## Conventions specific to this repo
 
-- Config is **flag-or-env**, never hardcoded. Add a flag in `main.go` bound to an `env.GetEnv*`
-  default, and (for Loki) thread it through the `Options` map → `connectLoki`. Keep the README
-  env-var table in sync.
-- Tests use `testify`; table-driven style throughout `internal/db`. Loki tests use
-  `httptest.Server` to fake the Loki API — no live Loki needed for `internal/db` unit tests.
+- Config is **flag-or-env**, never hardcoded. Add a flag in `main.go`'s `parseArgs` bound to an
+  `env.GetEnv*` default, fold it into the typed config in `buildConfig`, and keep the README env-var
+  table in sync.
+- Tests use `testify`, table-driven. Loki tests use `httptest.Server` (`fakeLoki`) — no live Loki
+  needed. Metric assertions use `prometheus/.../testutil` with unique label values per test to stay
+  isolated (the counters are process-global). SQL backends are exercised by the integration build tag.
 - golangci-lint runs 25+ linters including `gosec`, `gocyclo` (min 15), `gocognit` (min 20), and
-  `noctx`. Keep functions small and pass `context.Context` to anything doing HTTP.
+  `noctx`. Keep functions small and pass `context.Context` to anything doing I/O.
