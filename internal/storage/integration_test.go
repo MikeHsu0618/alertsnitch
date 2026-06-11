@@ -9,10 +9,12 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/metrics"
 	"github.com/mikehsu0618/alertsnitch/internal/storage"
 	"github.com/mikehsu0618/alertsnitch/internal/storage/sqlstore"
 	"github.com/mikehsu0618/alertsnitch/internal/webhook"
@@ -59,7 +61,11 @@ func TestSavingAnAlertWorks(t *testing.T) {
 	data, err := webhook.Parse(b)
 	require.NoError(t, err)
 
-	assert.NoError(t, driver.Save(context.Background(), data, nil))
+	before := testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues(data.Receiver, data.Status))
+	require.NoError(t, driver.Save(context.Background(), data, nil))
+	assert.Equal(t, before+float64(len(data.Alerts)),
+		testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues(data.Receiver, data.Status)),
+		"SQL backend must record saved alerts")
 }
 
 func TestSavingAFiringAlertWorks(t *testing.T) {

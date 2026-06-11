@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/metrics"
 )
 
 // Postgres is the PostgreSQL storage backend.
@@ -28,7 +29,7 @@ func ConnectPostgres(cfg Config) (*Postgres, error) {
 
 // Save persists an alert group. extraLabels is ignored by SQL backends.
 func (d *Postgres) Save(ctx context.Context, data *internal.AlertGroup, _ map[string]string) error {
-	return d.unitOfWork(ctx, func(tx *sql.Tx) error {
+	err := d.unitOfWork(ctx, func(tx *sql.Tx) error {
 		var alertGroupID int64
 		err := tx.QueryRowContext(ctx, `
 			INSERT INTO AlertGroup (time, receiver, status, externalURL, groupKey)
@@ -50,6 +51,8 @@ func (d *Postgres) Save(ctx context.Context, data *internal.AlertGroup, _ map[st
 
 		return insertAlertsPG(ctx, tx, alertGroupID, data.Alerts)
 	})
+	metrics.RecordSaveOutcome(data.Receiver, data.Status, len(data.Alerts), err)
+	return err
 }
 
 func (*Postgres) String() string { return "postgres database driver" }

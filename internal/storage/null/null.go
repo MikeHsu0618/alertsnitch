@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/metrics"
 )
 
 // Store is a backend that does nothing.
@@ -16,6 +17,7 @@ type Store struct{}
 // Save logs the alert at debug level and discards it.
 func (Store) Save(_ context.Context, data *internal.AlertGroup, _ map[string]string) error {
 	logrus.Debugf("save alert %#v", data)
+	metrics.RecordSaveOutcome(data.Receiver, data.Status, len(data.Alerts), nil)
 	return nil
 }
 

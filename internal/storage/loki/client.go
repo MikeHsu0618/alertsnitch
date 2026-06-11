@@ -101,16 +101,9 @@ func (c *Client) Close(ctx context.Context) error {
 	return nil
 }
 
-// recordOutcome reports a durable persistence outcome to Prometheus. It is the
-// single place Loki touches metrics, and it does so only for what actually
-// happened — fixing the batch-mode lie where enqueue was counted as saved.
+// recordOutcome reports a durable persistence outcome. For batch mode this is
+// the fix for the original lie where enqueue was counted as saved: the outcome
+// is recorded at flush resolution, and queue-full drops count as failures.
 func recordOutcome(receiver, status string, alertCount int, err error) {
-	if alertCount == 0 {
-		return
-	}
-	if err != nil {
-		metrics.AlertsSavingFailuresTotal.WithLabelValues(receiver, status).Add(float64(alertCount))
-		return
-	}
-	metrics.AlertsSavedTotal.WithLabelValues(receiver, status).Add(float64(alertCount))
+	metrics.RecordSaveOutcome(receiver, status, alertCount, err)
 }

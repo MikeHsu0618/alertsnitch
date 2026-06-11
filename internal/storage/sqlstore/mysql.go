@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/metrics"
 )
 
 // MySQL is the MySQL storage backend.
@@ -28,7 +29,7 @@ func ConnectMySQL(cfg Config) (*MySQL, error) {
 
 // Save persists an alert group. extraLabels is ignored by SQL backends.
 func (d *MySQL) Save(ctx context.Context, data *internal.AlertGroup, _ map[string]string) error {
-	return d.unitOfWork(ctx, func(tx *sql.Tx) error {
+	err := d.unitOfWork(ctx, func(tx *sql.Tx) error {
 		r, err := tx.ExecContext(ctx, `
 			INSERT INTO AlertGroup (time, receiver, status, externalURL, groupKey)
 			VALUES (now(), ?, ?, ?, ?)`, data.Receiver, data.Status, data.ExternalURL, data.GroupKey)
@@ -52,6 +53,8 @@ func (d *MySQL) Save(ctx context.Context, data *internal.AlertGroup, _ map[strin
 
 		return insertAlerts(ctx, tx, alertGroupID, data.Alerts)
 	})
+	metrics.RecordSaveOutcome(data.Receiver, data.Status, len(data.Alerts), err)
+	return err
 }
 
 func (*MySQL) String() string { return "mysql database driver" }
