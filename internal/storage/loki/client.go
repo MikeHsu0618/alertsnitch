@@ -85,6 +85,7 @@ func (c *Client) Save(ctx context.Context, data *internal.AlertGroup, extraLabel
 
 	streams, err := c.dataToStream(data, extraLabels)
 	if err != nil {
+		recordOutcome(data.Receiver, data.Status, len(data.Alerts), err)
 		return fmt.Errorf("error converting data to stream: %w", err)
 	}
 

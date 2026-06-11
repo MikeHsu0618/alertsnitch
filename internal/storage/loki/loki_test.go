@@ -253,6 +253,27 @@ func TestSave_BatchConversionFailureCountedPerGroup(t *testing.T) {
 	assert.Equal(t, badFailed+0, testutil.ToFloat64(metrics.AlertsSavingFailuresTotal.WithLabelValues("conv-bad", "firing")), "0-alert group records nothing (no alerts), but is never counted saved")
 }
 
+// TestSave_SyncConversionFailureNotCountedSaved guards the sync path symmetric
+// with the batch path (Codex item 1): a stream-conversion error must surface as
+// an error and must never be counted as saved. (A 0-alert group records nothing
+// because alertCount==0; the point is the sync path now also routes conversion
+// errors through recordOutcome, matching batch mode.)
+func TestSave_SyncConversionFailureNotCountedSaved(t *testing.T) {
+	fake := newFakeLoki()
+	defer fake.close()
+
+	client, err := New(testConfig(t, fake.server.URL))
+	require.NoError(t, err)
+	defer client.Close(context.Background())
+
+	bad := &internal.AlertGroup{Receiver: "sync-conv", Status: "firing"} // no alerts -> dataToStream errors
+	saved := testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues("sync-conv", "firing"))
+
+	err = client.Save(context.Background(), bad, nil)
+	assert.Error(t, err, "conversion failure must surface as an error")
+	assert.Equal(t, saved, testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues("sync-conv", "firing")), "conversion failure must not be counted saved")
+}
+
 // TestClose_TimeoutReturnsError is the regression test for the Codex finding
 // that Close must honor its context and surface an incomplete drain. With a
 // slow Loki and an already-short deadline, Close must return an error rather
