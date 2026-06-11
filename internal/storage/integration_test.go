@@ -47,9 +47,12 @@ func TestHealthAndReachability(t *testing.T) {
 	checker, ok := driver.(internal.HealthChecker)
 	require.True(t, ok, "SQL backend should report health")
 
-	h := checker.CheckHealth(context.Background())
-	assert.True(t, h.Ready, "database should be reachable")
-	assert.True(t, h.Healthy, "model should be supported: %s", h.Detail)
+	live := checker.CheckLiveness(context.Background())
+	assert.True(t, live.Ready, "database should be reachable")
+
+	ready := checker.CheckReadiness(context.Background())
+	assert.True(t, ready.Ready, "database should be reachable")
+	assert.True(t, ready.Healthy, "model should be supported: %s", ready.Detail)
 }
 
 func TestSavingAnAlertWorks(t *testing.T) {

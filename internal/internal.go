@@ -38,8 +38,15 @@ type Health struct {
 // HealthChecker is implemented by backends that can report their health.
 // The server type-asserts this; a backend that does not implement it is
 // treated as always ready and healthy.
+//
+// The two checks map to the Kubernetes probe semantics:
+//   - CheckLiveness answers "can I reach my backend?" — cheap, no schema work.
+//     A failure means the process should be restarted.
+//   - CheckReadiness answers "am I ready to serve correctly?" — reachability
+//     plus schema/model compatibility. A failure means pull from rotation.
 type HealthChecker interface {
-	CheckHealth(ctx context.Context) Health
+	CheckLiveness(ctx context.Context) Health
+	CheckReadiness(ctx context.Context) Health
 }
 
 // AlertGroup is the data read from a webhook call

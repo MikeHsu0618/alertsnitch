@@ -73,9 +73,18 @@ func (c *Client) setAuthAndTenantHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 }
 
-// CheckHealth reports whether Loki is reachable. Loki has no schema/model, so
-// Healthy is always true once reachable.
-func (c *Client) CheckHealth(ctx context.Context) internal.Health {
+// CheckLiveness reports whether Loki is reachable.
+func (c *Client) CheckLiveness(ctx context.Context) internal.Health {
+	return c.reachability(ctx)
+}
+
+// CheckReadiness is identical to liveness for Loki: there is no schema/model to
+// validate, so reachability is sufficient.
+func (c *Client) CheckReadiness(ctx context.Context) internal.Health {
+	return c.reachability(ctx)
+}
+
+func (c *Client) reachability(ctx context.Context) internal.Health {
 	if err := c.ping(ctx); err != nil {
 		return internal.Health{Ready: false, Healthy: true, Detail: err.Error()}
 	}

@@ -29,12 +29,11 @@ make watch          # hot reload via air (go install github.com/air-verse/air@la
 Run a single test:
 
 ```sh
-go test ./internal/db -run TestFunctionName -v
-go test ./internal/db -run TestName/subtest_name -v   # specific subtest
-go test ./internal/db -bench BenchmarkName -run '^$'   # benchmarks live in *_benchmark_test.go
+go test ./internal/storage/loki -run TestFunctionName -v
+go test ./internal/storage/loki -run TestName/subtest_name -v   # specific subtest
 ```
 
-The SQL backends (`internal/db/{mysql,postgres}.go`) only have meaningful coverage when a real
+The SQL backends (`internal/storage/sqlstore/{mysql,postgres}.go`) only have meaningful coverage when a real
 database is reachable. CI spins up MySQL 8.0 and Postgres 15 service containers, bootstraps them
 with both SQL files, and sets `ALERTSNITCH_BACKEND` + `ALERTSNITCH_BACKEND_ENDPOINT` (see
 `.github/workflows/ci.yml`). To replicate locally, run a DB, apply both files in
@@ -51,7 +50,7 @@ direction is one-way: `internal` (leaf: domain model + interfaces) ← `internal
 
 - `internal/internal.go` — the central contracts (this is the leaf package everything imports).
   `Storer` is the minimal backend interface: `Save(ctx, *AlertGroup, extraLabels) error` and
-  `Close(ctx) error`. `HealthChecker` (`CheckHealth(ctx) Health`) is **optional** — the server
+  `Close(ctx) error`. `HealthChecker` (`CheckLiveness`/`CheckReadiness(ctx) Health`) is **optional** — the server
   type-asserts it; a backend without it is treated as always ready. `AlertGroup`/`Alert` is the
   parsed webhook payload.
 - `internal/storage/storage.go` — the backend **registry**. `Connect(Config)` looks up a `Factory`
@@ -61,7 +60,7 @@ direction is one-way: `internal` (leaf: domain model + interfaces) ← `internal
   matching `Backend` is consulted (no stringly-typed `map[string]string`).
 - `internal/storage/sqlstore/` — MySQL + Postgres. They share connect / transaction / model-check /
   health / close via the embedded `base`; only the dialect-specific INSERTs differ (`?` vs `$N`,
-  `LastInsertId` vs `RETURNING`). `SupportedModel` ("0.1.0") is checked in `CheckHealth`.
+  `LastInsertId` vs `RETURNING`). `SupportedModel` ("0.1.0") is checked in `CheckReadiness` (liveness only pings).
 - `internal/storage/loki/` — the Loki backend, split by concern: `config` (typed config + validation
   + TLS), `encoding` (wire types + `FlattenAlertGroup`), `stream` (label allow-list + stream
   construction), `transport` (gzip push + health ping), `batch` (async processor), `client` (the
@@ -70,7 +69,7 @@ direction is one-way: `internal` (leaf: domain model + interfaces) ← `internal
 - `internal/server/server.go` — gorilla/mux router (`/webhook`, `/-/ready`, `/-/health`, `/metrics`).
   `SupportedWebhookVersion` ("4") is enforced (else 400). The handler extracts query params
   (`/webhook?source=alertmanager`) via `queryLabels` and passes them as `extraLabels` — the storage
-  layer never touches HTTP. The probe handlers own the `DatabaseUp` gauge, set from `CheckHealth`.
+  layer never touches HTTP. The probe handlers own the `DatabaseUp` gauge; `/-/health` is liveness (ping only), `/-/ready` is readiness (ping + model).
 - `main.go` — `parseArgs` (each flag mirrors an `ALERTSNITCH_*` env var via `pkg/env`) → `buildConfig`
   (typed; invalid values like a bad batch-flush duration error at startup) → `storage.Connect` →
   serve. Graceful shutdown drains the server **and** `driver.Close(ctx)` within one 30s deadline.

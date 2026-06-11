@@ -21,9 +21,12 @@ func TestNullStore(t *testing.T) {
 	assert.NoError(t, s.Save(context.Background(), &internal.AlertGroup{}, nil))
 	assert.NoError(t, s.Close(context.Background()))
 
-	h := s.CheckHealth(context.Background())
-	assert.True(t, h.Ready)
-	assert.True(t, h.Healthy)
+	live := s.CheckLiveness(context.Background())
+	assert.True(t, live.Ready)
+
+	ready := s.CheckReadiness(context.Background())
+	assert.True(t, ready.Ready)
+	assert.True(t, ready.Healthy)
 }
 
 // TestNullStore_RecordsSavedMetric guards against the regression where moving

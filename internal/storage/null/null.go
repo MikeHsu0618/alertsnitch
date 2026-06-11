@@ -21,8 +21,13 @@ func (Store) Save(_ context.Context, data *internal.AlertGroup, _ map[string]str
 	return nil
 }
 
-// CheckHealth always reports ready and healthy.
-func (Store) CheckHealth(_ context.Context) internal.Health {
+// CheckLiveness always reports ready.
+func (Store) CheckLiveness(_ context.Context) internal.Health {
+	return internal.Health{Ready: true, Healthy: true}
+}
+
+// CheckReadiness always reports ready and healthy.
+func (Store) CheckReadiness(_ context.Context) internal.Health {
 	return internal.Health{Ready: true, Healthy: true}
 }
 

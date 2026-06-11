@@ -135,8 +135,10 @@ func (s *Server) webhookPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// healthyProbe is the liveness probe: it only checks that the backend is
+// reachable (no schema query), so a frequent probe stays cheap.
 func (s *Server) healthyProbe(w http.ResponseWriter, r *http.Request) {
-	h := s.health(r.Context())
+	h := s.probe(r.Context(), internal.HealthChecker.CheckLiveness)
 	if !h.Ready {
 		logrus.Errorf("backend is not reachable: %s", h.Detail)
 		http.Error(w, fmt.Sprintf("backend is not reachable: %s", h.Detail), http.StatusServiceUnavailable)
@@ -144,8 +146,9 @@ func (s *Server) healthyProbe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// readyProbe is the readiness probe: reachability plus schema/model compatibility.
 func (s *Server) readyProbe(w http.ResponseWriter, r *http.Request) {
-	h := s.health(r.Context())
+	h := s.probe(r.Context(), internal.HealthChecker.CheckReadiness)
 	if !h.Ready {
 		logrus.Errorf("backend is not reachable: %s", h.Detail)
 		http.Error(w, fmt.Sprintf("backend is not reachable: %s", h.Detail), http.StatusServiceUnavailable)
@@ -158,17 +161,17 @@ func (s *Server) readyProbe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// health asks the backend for its health (if it reports any) and reflects
+// probe runs the given health check (if the backend reports health) and reflects
 // reachability into the DatabaseUp gauge. Backends that do not implement
 // HealthChecker are treated as always ready and healthy.
-func (s *Server) health(ctx context.Context) internal.Health {
+func (s *Server) probe(ctx context.Context, check func(internal.HealthChecker, context.Context) internal.Health) internal.Health {
 	checker, ok := s.db.(internal.HealthChecker)
 	if !ok {
 		metrics.DatabaseUp.Set(1)
 		return internal.Health{Ready: true, Healthy: true}
 	}
 
-	h := checker.CheckHealth(ctx)
+	h := check(checker, ctx)
 	if h.Ready {
 		metrics.DatabaseUp.Set(1)
 	} else {

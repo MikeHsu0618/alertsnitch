@@ -34,7 +34,11 @@ func (f *fakeStorer) Save(_ context.Context, data *internal.AlertGroup, extraLab
 
 func (f *fakeStorer) Close(context.Context) error { return nil }
 
-func (f *fakeStorer) CheckHealth(context.Context) internal.Health {
+func (f *fakeStorer) CheckLiveness(context.Context) internal.Health {
+	return internal.Health{Ready: !f.notReady, Healthy: true}
+}
+
+func (f *fakeStorer) CheckReadiness(context.Context) internal.Health {
 	return internal.Health{Ready: !f.notReady, Healthy: !f.notHealthy}
 }
 
@@ -134,5 +138,20 @@ func TestHealthProbe(t *testing.T) {
 		rec := httptest.NewRecorder()
 		s.r.ServeHTTP(rec, req)
 		assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
+	})
+
+	// Liveness must ignore schema/model problems: a reachable-but-stale-model
+	// backend is still "alive" (restarting it would not help). Only readiness
+	// gates on the model.
+	t.Run("live but not ready when only model is invalid", func(t *testing.T) {
+		s := New(&fakeStorer{notHealthy: true}, false)
+
+		live := httptest.NewRecorder()
+		s.r.ServeHTTP(live, httptest.NewRequest(http.MethodGet, "/-/health", nil))
+		assert.Equal(t, http.StatusOK, live.Code, "liveness ignores the model")
+
+		ready := httptest.NewRecorder()
+		s.r.ServeHTTP(ready, httptest.NewRequest(http.MethodGet, "/-/ready", nil))
+		assert.Equal(t, http.StatusServiceUnavailable, ready.Code, "readiness gates on the model")
 	})
 }

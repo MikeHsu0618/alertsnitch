@@ -67,8 +67,17 @@ func (b base) unitOfWork(ctx context.Context, f func(*sql.Tx) error) error {
 	return nil
 }
 
-// CheckHealth reports reachability (Ready) and schema compatibility (Healthy).
-func (b base) CheckHealth(ctx context.Context) internal.Health {
+// CheckLiveness reports reachability only — a cheap ping with no schema query,
+// suitable for a frequently-hit liveness probe.
+func (b base) CheckLiveness(ctx context.Context) internal.Health {
+	if err := b.db.PingContext(ctx); err != nil {
+		return internal.Health{Ready: false, Healthy: false, Detail: err.Error()}
+	}
+	return internal.Health{Ready: true, Healthy: true}
+}
+
+// CheckReadiness reports reachability (Ready) and schema compatibility (Healthy).
+func (b base) CheckReadiness(ctx context.Context) internal.Health {
 	if err := b.db.PingContext(ctx); err != nil {
 		return internal.Health{Ready: false, Healthy: false, Detail: err.Error()}
 	}
@@ -109,7 +118,7 @@ func (b base) verifyOnConnect() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	h := b.CheckHealth(ctx)
+	h := b.CheckReadiness(ctx)
 	if !h.Ready {
 		return fmt.Errorf("%s database is not reachable: %s", b.name, h.Detail)
 	}
