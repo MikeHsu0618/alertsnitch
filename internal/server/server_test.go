@@ -13,24 +13,30 @@ import (
 	"github.com/mikehsu0618/alertsnitch/internal"
 )
 
-// fakeStorer is a controllable test double for internal.Storer. It records the
-// last AlertGroup it was asked to save and lets each method's error be injected.
+// fakeStorer is a controllable test double for internal.Storer +
+// internal.HealthChecker. It records the last AlertGroup it was asked to save
+// and lets each method's behavior be injected.
 type fakeStorer struct {
-	saved      *internal.AlertGroup
-	saveErr    error
-	pingErr    error
-	modelErr   error
-	saveCalled int
+	saved       *internal.AlertGroup
+	savedLabels map[string]string
+	saveErr     error
+	notReady    bool
+	notHealthy  bool
+	saveCalled  int
 }
 
-func (f *fakeStorer) Save(_ context.Context, data *internal.AlertGroup) error {
+func (f *fakeStorer) Save(_ context.Context, data *internal.AlertGroup, extraLabels map[string]string) error {
 	f.saveCalled++
 	f.saved = data
+	f.savedLabels = extraLabels
 	return f.saveErr
 }
-func (f *fakeStorer) Ping() error       { return f.pingErr }
-func (f *fakeStorer) CheckModel() error { return f.modelErr }
-func (f *fakeStorer) Close() error      { return nil }
+
+func (f *fakeStorer) Close(context.Context) error { return nil }
+
+func (f *fakeStorer) CheckHealth(context.Context) internal.Health {
+	return internal.Health{Ready: !f.notReady, Healthy: !f.notHealthy}
+}
 
 func validPayload(t *testing.T) []byte {
 	t.Helper()
@@ -97,7 +103,7 @@ func TestReadyProbe(t *testing.T) {
 	})
 
 	t.Run("not ready when ping fails", func(t *testing.T) {
-		s := New(&fakeStorer{pingErr: assert.AnError}, false)
+		s := New(&fakeStorer{notReady: true}, false)
 		req := httptest.NewRequest(http.MethodGet, "/-/ready", nil)
 		rec := httptest.NewRecorder()
 		s.r.ServeHTTP(rec, req)
@@ -105,7 +111,7 @@ func TestReadyProbe(t *testing.T) {
 	})
 
 	t.Run("not ready when model invalid", func(t *testing.T) {
-		s := New(&fakeStorer{modelErr: assert.AnError}, false)
+		s := New(&fakeStorer{notHealthy: true}, false)
 		req := httptest.NewRequest(http.MethodGet, "/-/ready", nil)
 		rec := httptest.NewRecorder()
 		s.r.ServeHTTP(rec, req)
@@ -123,7 +129,7 @@ func TestHealthProbe(t *testing.T) {
 	})
 
 	t.Run("unhealthy when ping fails", func(t *testing.T) {
-		s := New(&fakeStorer{pingErr: assert.AnError}, false)
+		s := New(&fakeStorer{notReady: true}, false)
 		req := httptest.NewRequest(http.MethodGet, "/-/health", nil)
 		rec := httptest.NewRecorder()
 		s.r.ServeHTTP(rec, req)
