@@ -4,7 +4,7 @@
 package db_test
 
 import (
-	"os"
+	"context"
 	"os"
 	"testing"
 
@@ -43,7 +43,7 @@ func TestSavingAnAlertWorks(t *testing.T) {
 	driver, err := db.Connect(backend, connectionArgs())
 	a.NoError(err)
 
-	a.NoError(driver.Save(data))
+	a.NoError(driver.Save(context.Background(), data))
 }
 
 func TestSavingAFiringAlertWorks(t *testing.T) {
@@ -59,7 +59,7 @@ func TestSavingAFiringAlertWorks(t *testing.T) {
 	driver, err := db.Connect(backend, connectionArgs())
 	a.NoError(err)
 
-	a.NoError(driver.Save(data))
+	a.NoError(driver.Save(context.Background(), data))
 }
 
 func connectionArgs() db.ConnectionArgs {
