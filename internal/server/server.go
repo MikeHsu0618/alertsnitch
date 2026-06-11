@@ -140,6 +140,7 @@ func (s *Server) healthyProbe(w http.ResponseWriter, r *http.Request) {
 	if !h.Ready {
 		logrus.Errorf("backend is not reachable: %s", h.Detail)
 		http.Error(w, fmt.Sprintf("backend is not reachable: %s", h.Detail), http.StatusServiceUnavailable)
+		return
 	}
 }
 
@@ -153,6 +154,7 @@ func (s *Server) readyProbe(w http.ResponseWriter, r *http.Request) {
 	if !h.Healthy {
 		logrus.Errorf("backend model is invalid: %s", h.Detail)
 		http.Error(w, fmt.Sprintf("backend model is invalid: %s", h.Detail), http.StatusServiceUnavailable)
+		return
 	}
 }
 

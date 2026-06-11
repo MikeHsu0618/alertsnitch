@@ -48,41 +48,47 @@ func (d *Postgres) Save(ctx context.Context, data *internal.AlertGroup, _ map[st
 			return err
 		}
 
-		for _, alert := range data.Alerts {
-			var row *sql.Row
-			if alert.EndsAt.Before(alert.StartsAt) {
-				row = tx.QueryRowContext(ctx, `
-				INSERT INTO Alert (alertGroupID, status, startsAt, generatorURL, fingerprint)
-				VALUES ($1, $2, $3, $4, $5) RETURNING ID`,
-					alertGroupID, alert.Status, alert.StartsAt, alert.GeneratorURL, alert.Fingerprint)
-			} else {
-				row = tx.QueryRowContext(ctx, `
-				INSERT INTO Alert (alertGroupID, status, startsAt, endsAt, generatorURL, fingerprint)
-				VALUES ($1, $2, $3, $4, $5, $6) RETURNING ID`,
-					alertGroupID, alert.Status, alert.StartsAt, alert.EndsAt, alert.GeneratorURL, alert.Fingerprint)
-			}
-			var alertID int64
-			if err := row.Scan(&alertID); err != nil {
-				return fmt.Errorf("failed to insert into Alert: %w", err)
-			}
-
-			if err := insertKVPG(ctx, tx, "AlertLabel (AlertID, Label, Value)", alertID, alert.Labels); err != nil {
-				return err
-			}
-			if err := insertKVPG(ctx, tx, "AlertAnnotation (AlertID, Annotation, Value)", alertID, alert.Annotations); err != nil {
-				return err
-			}
-		}
-		return nil
+		return insertAlertsPG(ctx, tx, alertGroupID, data.Alerts)
 	})
 }
 
 func (*Postgres) String() string { return "postgres database driver" }
 
+func insertAlertsPG(ctx context.Context, tx *sql.Tx, alertGroupID int64, alerts []internal.Alert) error {
+	for _, alert := range alerts {
+		var row *sql.Row
+		if alert.EndsAt.Before(alert.StartsAt) {
+			row = tx.QueryRowContext(ctx, `
+			INSERT INTO Alert (alertGroupID, status, startsAt, generatorURL, fingerprint)
+			VALUES ($1, $2, $3, $4, $5) RETURNING ID`,
+				alertGroupID, alert.Status, alert.StartsAt, alert.GeneratorURL, alert.Fingerprint)
+		} else {
+			row = tx.QueryRowContext(ctx, `
+			INSERT INTO Alert (alertGroupID, status, startsAt, endsAt, generatorURL, fingerprint)
+			VALUES ($1, $2, $3, $4, $5, $6) RETURNING ID`,
+				alertGroupID, alert.Status, alert.StartsAt, alert.EndsAt, alert.GeneratorURL, alert.Fingerprint)
+		}
+		var alertID int64
+		if err := row.Scan(&alertID); err != nil {
+			return fmt.Errorf("failed to insert into Alert: %w", err)
+		}
+
+		if err := insertKVPG(ctx, tx, "AlertLabel (AlertID, Label, Value)", alertID, alert.Labels); err != nil {
+			return err
+		}
+		if err := insertKVPG(ctx, tx, "AlertAnnotation (AlertID, Annotation, Value)", alertID, alert.Annotations); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // insertKVPG inserts a map of key/value rows into a (id, key, value) table
-// using Postgres placeholder syntax.
+// using Postgres placeholder syntax. table is a compile-time constant supplied
+// by this package, never user input.
 func insertKVPG(ctx context.Context, tx *sql.Tx, table string, id int64, kv map[string]string) error {
 	for k, v := range kv {
+		//nolint:gosec // table is a package-internal constant, not user input
 		if _, err := tx.ExecContext(ctx, "INSERT INTO "+table+" VALUES ($1, $2, $3)", id, k, v); err != nil {
 			return fmt.Errorf("failed to insert into %s: %w", table, err)
 		}

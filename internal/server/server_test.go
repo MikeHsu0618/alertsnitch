@@ -45,8 +45,8 @@ func validPayload(t *testing.T) []byte {
 	return b
 }
 
-func post(s *Server, path string, body []byte) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(string(body)))
+func postWebhook(s *Server, body []byte) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader(string(body)))
 	rec := httptest.NewRecorder()
 	s.r.ServeHTTP(rec, req)
 	return rec
@@ -56,7 +56,7 @@ func TestWebhookPost_ValidPayloadIsSaved(t *testing.T) {
 	fake := &fakeStorer{}
 	s := New(fake, false)
 
-	rec := post(s, "/webhook", validPayload(t))
+	rec := postWebhook(s, validPayload(t))
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, 1, fake.saveCalled, "Save should be called exactly once")
@@ -67,7 +67,7 @@ func TestWebhookPost_InvalidJSONReturns400(t *testing.T) {
 	fake := &fakeStorer{}
 	s := New(fake, false)
 
-	rec := post(s, "/webhook", []byte("{not json"))
+	rec := postWebhook(s, []byte("{not json"))
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	assert.Equal(t, 0, fake.saveCalled, "Save must not be called for an invalid payload")
@@ -77,7 +77,7 @@ func TestWebhookPost_UnsupportedVersionReturns400(t *testing.T) {
 	fake := &fakeStorer{}
 	s := New(fake, false)
 
-	rec := post(s, "/webhook", []byte(`{"version":"3","status":"firing","alerts":[]}`))
+	rec := postWebhook(s, []byte(`{"version":"3","status":"firing","alerts":[]}`))
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	assert.Equal(t, 0, fake.saveCalled)
@@ -87,7 +87,7 @@ func TestWebhookPost_SaveFailureReturns500(t *testing.T) {
 	fake := &fakeStorer{saveErr: assert.AnError}
 	s := New(fake, false)
 
-	rec := post(s, "/webhook", validPayload(t))
+	rec := postWebhook(s, validPayload(t))
 
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 	assert.Equal(t, 1, fake.saveCalled)

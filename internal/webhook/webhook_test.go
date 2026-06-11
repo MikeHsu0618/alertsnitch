@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/mikehsu0618/alertsnitch/internal/webhook"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParsingPayloadWithEmptyPayloadFails(t *testing.T) {
