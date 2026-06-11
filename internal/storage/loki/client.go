@@ -58,16 +58,16 @@ func New(cfg Config) (*Client, error) {
 		logrus.Infof("Loki batch processing enabled: size=%d, timeout=%v", cfg.Batch.Size, cfg.Batch.FlushTimeout)
 	}
 
+	// Fail fast if Loki is unreachable at startup. The DatabaseUp gauge is owned
+	// by the server's probe handlers, not by storage, so it is not set here.
 	pingCtx, cancel := context.WithTimeout(context.Background(), cfg.RequestTimeout)
 	defer cancel()
 	if err := c.ping(pingCtx); err != nil {
 		if c.batch != nil {
-			c.batch.stop(context.Background())
+			_ = c.batch.stop(context.Background())
 		}
-		metrics.DatabaseUp.Set(0)
 		return nil, err
 	}
-	metrics.DatabaseUp.Set(1)
 
 	return c, nil
 }
@@ -93,10 +93,11 @@ func (c *Client) Save(ctx context.Context, data *internal.AlertGroup, extraLabel
 	return err
 }
 
-// Close flushes any buffered alerts and releases resources within ctx.
+// Close flushes any buffered alerts and releases resources within ctx. It
+// returns an error if a batch drain could not complete before ctx expired.
 func (c *Client) Close(ctx context.Context) error {
 	if c.batch != nil {
-		c.batch.stop(ctx)
+		return c.batch.stop(ctx)
 	}
 	return nil
 }

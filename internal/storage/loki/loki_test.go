@@ -26,7 +26,8 @@ type fakeLoki struct {
 	server     *httptest.Server
 	mu         sync.Mutex
 	received   []stream
-	pushStatus int // status code to return from /push
+	pushStatus int           // status code to return from /push
+	pushDelay  time.Duration // artificial delay before responding to /push
 	pushCount  int
 }
 
@@ -37,6 +38,16 @@ func newFakeLoki() *fakeLoki {
 		w.WriteHeader(http.StatusOK)
 	})
 	mux.HandleFunc("/loki/api/v1/push", func(w http.ResponseWriter, r *http.Request) {
+		f.mu.Lock()
+		delay := f.pushDelay
+		f.mu.Unlock()
+		if delay > 0 {
+			select {
+			case <-time.After(delay):
+			case <-r.Context().Done():
+				return
+			}
+		}
 		f.mu.Lock()
 		defer f.mu.Unlock()
 		f.pushCount++
@@ -208,4 +219,63 @@ func TestSave_BatchFailureIsCounted(t *testing.T) {
 
 	assert.Equal(t, failed+1, testutil.ToFloat64(metrics.AlertsSavingFailuresTotal.WithLabelValues("batch-fail", "firing")), "failed flush must be counted")
 	assert.Equal(t, saved, testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues("batch-fail", "firing")), "failed flush must not be counted as saved")
+}
+
+// TestSave_BatchConversionFailureCountedPerGroup guards the invariant from the
+// Codex review: a group that fails stream conversion is accounted for under ITS
+// own labels and never borrows a sibling group's successful delivery outcome.
+// (A 0-alert group records nothing because alertCount==0, but the key point is
+// it must never be counted as saved.)
+func TestSave_BatchConversionFailureCountedPerGroup(t *testing.T) {
+	fake := newFakeLoki()
+	defer fake.close()
+
+	cfg := testConfig(t, fake.server.URL)
+	cfg.Batch = DefaultBatchConfig()
+	cfg.Batch.Enabled = true
+	client, err := New(cfg)
+	require.NoError(t, err)
+
+	good := testAlertGroup()
+	good.Receiver = "conv-good"
+	bad := &internal.AlertGroup{Receiver: "conv-bad", Status: "firing"} // no alerts -> dataToStream errors
+
+	goodSaved := testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues("conv-good", "firing"))
+	badSaved := testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues("conv-bad", "firing"))
+	badFailed := testutil.ToFloat64(metrics.AlertsSavingFailuresTotal.WithLabelValues("conv-bad", "firing"))
+
+	require.NoError(t, client.Save(context.Background(), good, nil))
+	require.NoError(t, client.Save(context.Background(), bad, nil))
+	require.NoError(t, client.Close(context.Background()))
+
+	assert.Equal(t, goodSaved+1, testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues("conv-good", "firing")), "valid group saved")
+	assert.Equal(t, badSaved, testutil.ToFloat64(metrics.AlertsSavedTotal.WithLabelValues("conv-bad", "firing")), "conversion-failed group must NOT be counted saved")
+	assert.Equal(t, badFailed+0, testutil.ToFloat64(metrics.AlertsSavingFailuresTotal.WithLabelValues("conv-bad", "firing")), "0-alert group records nothing (no alerts), but is never counted saved")
+}
+
+// TestClose_TimeoutReturnsError is the regression test for the Codex finding
+// that Close must honor its context and surface an incomplete drain. With a
+// slow Loki and an already-short deadline, Close must return an error rather
+// than reporting a clean shutdown.
+func TestClose_TimeoutReturnsError(t *testing.T) {
+	fake := newFakeLoki()
+	defer fake.close()
+	fake.mu.Lock()
+	fake.pushDelay = 500 * time.Millisecond
+	fake.mu.Unlock()
+
+	cfg := testConfig(t, fake.server.URL)
+	cfg.Batch = DefaultBatchConfig()
+	cfg.Batch.Enabled = true
+	client, err := New(cfg)
+	require.NoError(t, err)
+
+	ag := testAlertGroup()
+	ag.Receiver = "close-timeout"
+	require.NoError(t, client.Save(context.Background(), ag, nil))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	err = client.Close(ctx)
+	assert.Error(t, err, "Close must report that the drain did not complete within the deadline")
 }

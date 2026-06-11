@@ -2,6 +2,7 @@ package loki
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -15,6 +16,13 @@ import (
 type queuedAlert struct {
 	group       *internal.AlertGroup
 	extraLabels map[string]string
+}
+
+// convertedGroup pairs a queued alert with its successfully built streams so
+// the flusher can account for each group independently.
+type convertedGroup struct {
+	qa      queuedAlert
+	streams []stream
 }
 
 // batchProcessor decouples three concerns that the original implementation
@@ -33,6 +41,11 @@ type batchProcessor struct {
 	stopCh   chan struct{}
 	stopOnce sync.Once
 	wg       sync.WaitGroup
+
+	// runCtx bounds all delivery work; canceling it aborts in-flight pushes
+	// and pending retries so shutdown does not run on past its deadline.
+	runCtx    context.Context
+	runCancel context.CancelFunc
 }
 
 func newBatchProcessor(client *Client, cfg BatchConfig) *batchProcessor {
@@ -40,12 +53,15 @@ func newBatchProcessor(client *Client, cfg BatchConfig) *batchProcessor {
 	if bufferSize < 1000 {
 		bufferSize = 1000
 	}
+	runCtx, runCancel := context.WithCancel(context.Background())
 	return &batchProcessor{
-		client:  client,
-		cfg:     cfg,
-		in:      make(chan queuedAlert, bufferSize),
-		flushCh: make(chan []queuedAlert, 4),
-		stopCh:  make(chan struct{}),
+		client:    client,
+		cfg:       cfg,
+		in:        make(chan queuedAlert, bufferSize),
+		flushCh:   make(chan []queuedAlert, 4),
+		stopCh:    make(chan struct{}),
+		runCtx:    runCtx,
+		runCancel: runCancel,
 	}
 }
 
@@ -133,17 +149,32 @@ func (b *batchProcessor) flush(batch []queuedAlert) {
 		return
 	}
 
-	streams := b.mergeStreams(batch)
-	err := b.deliver(streams)
-
-	// Account for every alert in the batch with the outcome of this delivery.
+	// Convert each group independently. A group that fails stream conversion is
+	// its own failure — it must not be silently skipped, nor borrow another
+	// group's (possibly successful) delivery outcome.
+	ready := make([]convertedGroup, 0, len(batch))
 	for _, qa := range batch {
-		recordOutcome(qa.group.Receiver, qa.group.Status, len(qa.group.Alerts), err)
+		streams, err := b.client.dataToStream(qa.group, qa.extraLabels)
+		if err != nil {
+			logrus.Errorf("Error converting data to stream: %v", err)
+			recordOutcome(qa.group.Receiver, qa.group.Status, len(qa.group.Alerts), err)
+			continue
+		}
+		ready = append(ready, convertedGroup{qa: qa, streams: streams})
+	}
+	if len(ready) == 0 {
+		return
+	}
+
+	err := b.deliver(mergeStreams(ready))
+	for _, g := range ready {
+		recordOutcome(g.qa.group.Receiver, g.qa.group.Status, len(g.qa.group.Alerts), err)
 	}
 }
 
 // deliver pushes merged streams with bounded retries. It runs on the flusher
-// goroutine, so its backoff sleeps do not stall accumulation.
+// goroutine, so its backoff sleeps do not stall accumulation, and it honors
+// runCtx so a shutdown deadline aborts in-flight work instead of running on.
 func (b *batchProcessor) deliver(streams []stream) error {
 	if len(streams) == 0 {
 		return nil
@@ -153,11 +184,15 @@ func (b *batchProcessor) deliver(streams []stream) error {
 	var lastErr error
 	for attempt := 0; attempt <= b.cfg.MaxRetries; attempt++ {
 		if attempt > 0 {
-			time.Sleep(b.cfg.RetryDelay * time.Duration(attempt))
+			select {
+			case <-time.After(b.cfg.RetryDelay * time.Duration(attempt)):
+			case <-b.runCtx.Done():
+				return fmt.Errorf("loki batch flush aborted during shutdown: %w", b.runCtx.Err())
+			}
 			logrus.Warnf("Retrying loki batch flush, attempt %d/%d", attempt, b.cfg.MaxRetries)
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), b.client.cfg.RequestTimeout)
+		ctx, cancel := context.WithTimeout(b.runCtx, b.client.cfg.RequestTimeout)
 		err := b.client.pushPayload(ctx, p)
 		cancel()
 		if err == nil {
@@ -165,20 +200,18 @@ func (b *batchProcessor) deliver(streams []stream) error {
 		}
 		lastErr = err
 		logrus.Errorf("Failed to flush loki batch (attempt %d/%d): %v", attempt+1, b.cfg.MaxRetries+1, err)
+		if b.runCtx.Err() != nil {
+			return fmt.Errorf("loki batch flush aborted during shutdown: %w", b.runCtx.Err())
+		}
 	}
 	logrus.Errorf("Giving up on loki batch after %d attempts: %v", b.cfg.MaxRetries+1, lastErr)
 	return lastErr
 }
 
-func (b *batchProcessor) mergeStreams(batch []queuedAlert) []stream {
+func mergeStreams(groups []convertedGroup) []stream {
 	streamMap := make(map[string]*stream)
-	for _, qa := range batch {
-		streams, err := b.client.dataToStream(qa.group, qa.extraLabels)
-		if err != nil {
-			logrus.Errorf("Error converting data to stream: %v", err)
-			continue
-		}
-		for _, s := range streams {
+	for _, g := range groups {
+		for _, s := range g.streams {
 			key := streamKey(s.Stream)
 			if existing, ok := streamMap[key]; ok {
 				existing.Values = append(existing.Values, s.Values...)
@@ -198,8 +231,10 @@ func (b *batchProcessor) mergeStreams(batch []queuedAlert) []stream {
 }
 
 // stop signals shutdown and waits for buffered alerts to flush, bounded by ctx.
-// It is safe to call more than once.
-func (b *batchProcessor) stop(ctx context.Context) {
+// On a clean drain it returns nil; if ctx expires first it aborts in-flight
+// delivery and returns an error so the caller knows the drain was incomplete
+// and some buffered alerts may have been lost. Safe to call more than once.
+func (b *batchProcessor) stop(ctx context.Context) error {
 	b.stopOnce.Do(func() { close(b.stopCh) })
 
 	done := make(chan struct{})
@@ -210,7 +245,14 @@ func (b *batchProcessor) stop(ctx context.Context) {
 
 	select {
 	case <-done:
+		b.runCancel()
+		return nil
 	case <-ctx.Done():
-		logrus.Warnf("Loki batch shutdown did not complete within the deadline: %v; some buffered alerts may be lost", ctx.Err())
+		// Abort in-flight pushes/retries so delivery does not continue past the
+		// deadline on a background context.
+		b.runCancel()
+		err := fmt.Errorf("loki batch shutdown did not complete within the deadline: %w", ctx.Err())
+		logrus.Warnf("%v; some buffered alerts may be lost", err)
+		return err
 	}
 }
