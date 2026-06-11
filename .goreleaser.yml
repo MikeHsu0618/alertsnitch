@@ -26,9 +26,9 @@ builds:
         goarch: arm64
     ldflags:
       - -s -w
-      - -X gitlab.com/yakshaving.art/alertsnitch/version.Version={{.Version}}
-      - -X gitlab.com/yakshaving.art/alertsnitch/version.Commit={{.Commit}}
-      - -X gitlab.com/yakshaving.art/alertsnitch/version.Date={{.Date}}
+      - -X github.com/mikehsu0618/alertsnitch/version.Version={{.Version}}
+      - -X github.com/mikehsu0618/alertsnitch/version.Commit={{.Commit}}
+      - -X github.com/mikehsu0618/alertsnitch/version.Date={{.Date}}
 
 archives:
   - id: default

@@ -19,7 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal"
 )
 
 // readRequestBody reads and decompresses gzip body from HTTP request

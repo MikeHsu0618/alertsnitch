@@ -19,9 +19,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/metrics"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/middleware"
+	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/metrics"
+	"github.com/mikehsu0618/alertsnitch/internal/middleware"
 )
 
 const (

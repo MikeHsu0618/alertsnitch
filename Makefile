@@ -12,9 +12,9 @@ CGO_ENABLED ?= 0
 CURRENT_DIR := $(shell pwd)
 
 LDFLAGS := -s -w \
-	-X gitlab.com/yakshaving.art/alertsnitch/version.Version=$(VERSION) \
-	-X gitlab.com/yakshaving.art/alertsnitch/version.Commit=$(COMMIT_ID) \
-	-X gitlab.com/yakshaving.art/alertsnitch/version.Date=$(COMMIT_DATE)
+	-X github.com/mikehsu0618/alertsnitch/version.Version=$(VERSION) \
+	-X github.com/mikehsu0618/alertsnitch/version.Commit=$(COMMIT_ID) \
+	-X github.com/mikehsu0618/alertsnitch/version.Date=$(COMMIT_DATE)
 
 .PHONY: help
 help: ## Show this help

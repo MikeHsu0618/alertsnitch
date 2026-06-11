@@ -12,14 +12,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"gitlab.com/yakshaving.art/alertsnitch/pkg/env"
+	"github.com/mikehsu0618/alertsnitch/pkg/env"
 
 	"github.com/sirupsen/logrus"
 
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/db"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/server"
-	"gitlab.com/yakshaving.art/alertsnitch/version"
+	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/db"
+	"github.com/mikehsu0618/alertsnitch/internal/server"
+	"github.com/mikehsu0618/alertsnitch/version"
 )
 
 // Args are the arguments that can be passed to alertsnitch

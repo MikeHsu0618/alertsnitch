@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal"
 )
 
 // SupportedModel stores the model that is supported by this application

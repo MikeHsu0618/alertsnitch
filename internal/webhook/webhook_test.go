@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/webhook"
+	"github.com/mikehsu0618/alertsnitch/internal/webhook"
 )
 
 func TestParsingPayloadWithEmptyPayloadFails(t *testing.T) {

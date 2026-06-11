@@ -1,4 +1,4 @@
-module gitlab.com/yakshaving.art/alertsnitch
+module github.com/mikehsu0618/alertsnitch
 
 go 1.25
 

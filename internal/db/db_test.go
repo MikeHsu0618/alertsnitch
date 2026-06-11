@@ -13,9 +13,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/db"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/webhook"
+	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/db"
+	"github.com/mikehsu0618/alertsnitch/internal/webhook"
 )
 
 func TestPingingDatabaseWorks(t *testing.T) {

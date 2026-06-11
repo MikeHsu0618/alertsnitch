@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal"
 )
 
 // BenchmarkLokiClient_Save Performance benchmark

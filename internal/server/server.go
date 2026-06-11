@@ -11,10 +11,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/metrics"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/middleware"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/webhook"
+	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/metrics"
+	"github.com/mikehsu0618/alertsnitch/internal/middleware"
+	"github.com/mikehsu0618/alertsnitch/internal/webhook"
 )
 
 // SupportedWebhookVersion is the alert webhook data version that is supported

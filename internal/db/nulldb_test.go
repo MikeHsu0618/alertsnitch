@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/db"
+	"github.com/mikehsu0618/alertsnitch/internal/db"
 )
 
 func TestNullDBObject(t *testing.T) {

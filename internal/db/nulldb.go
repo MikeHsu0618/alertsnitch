@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/sirupsen/logrus"
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal"
 )
 
 // NullDB A database that does nothing
