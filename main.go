@@ -4,23 +4,28 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"gitlab.com/yakshaving.art/alertsnitch/pkg/env"
-
 	"github.com/sirupsen/logrus"
 
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/db"
-	"gitlab.com/yakshaving.art/alertsnitch/internal/server"
-	"gitlab.com/yakshaving.art/alertsnitch/version"
+	"github.com/mikehsu0618/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal/server"
+	"github.com/mikehsu0618/alertsnitch/internal/storage"
+	"github.com/mikehsu0618/alertsnitch/internal/storage/loki"
+	"github.com/mikehsu0618/alertsnitch/internal/storage/sqlstore"
+	"github.com/mikehsu0618/alertsnitch/pkg/env"
+	"github.com/mikehsu0618/alertsnitch/version"
 )
+
+const shutdownTimeout = 30 * time.Second
 
 // Args are the arguments that can be passed to alertsnitch
 type Args struct {
@@ -35,7 +40,7 @@ type Args struct {
 	LokiBasicAuthUser     string
 	LokiBasicAuthPassword string
 
-	LokiTLSInsecureSkipVerify string
+	LokiTLSInsecureSkipVerify bool
 	LokiTLSCACertPath         string
 	LokiTLSClientCertPath     string
 	LokiTLSClientKeyPath      string
@@ -48,7 +53,6 @@ type Args struct {
 	LokiAllowedLabels string
 
 	Debug   bool
-	DryRun  bool
 	Version bool
 }
 
@@ -57,24 +61,50 @@ func main() {
 		logrus.Debug("No .env file found")
 	}
 
+	args := parseArgs()
+
+	if args.Version {
+		fmt.Println(version.GetVersion())
+		os.Exit(0)
+	}
+	if args.Debug {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+
+	cfg, err := buildConfig(args)
+	if err != nil {
+		logrus.Fatalf("invalid configuration: %s", err)
+	}
+
+	driver, err := storage.Connect(cfg)
+	if err != nil {
+		logrus.Fatalf("failed to connect to backend: %s", err)
+	}
+	logrus.Info("Connected to backend")
+
+	s := server.New(driver, args.Debug)
+	run(s, driver, args.Address)
+}
+
+func parseArgs() Args {
 	args := Args{}
 
 	flag.BoolVar(&args.Version, "version", false, "print the version and exit")
 	flag.StringVar(&args.Address, "listen.address", env.GetEnv("ALERTSNITCH_ADDR", ":9567"), "address in which to listen for http requests")
 	flag.BoolVar(&args.Debug, "debug", env.GetEnvAsBool("ALERTSNITCH_DEBUG", false), "enable debug mode, which dumps alerts payloads to the log as they arrive")
 
-	flag.StringVar(&args.DBBackend, "database-backend", env.GetEnv("ALERTSNITCH_BACKEND", "mysql"), "database backend, allowed are mysql, postgres, loki, and null")
-	flag.StringVar(&args.DSN, "dsn", env.GetEnv(internal.DSNVar, ""), "Database DSN")
+	flag.StringVar(&args.DBBackend, "database-backend", env.GetEnv("ALERTSNITCH_BACKEND", "mysql"), "storage backend: "+strings.Join(storage.SupportedBackends(), ", "))
+	flag.StringVar(&args.DSN, "dsn", env.GetEnv(internal.DSNVar, ""), "backend connection endpoint (DSN or Loki URL)")
 
 	flag.IntVar(&args.MaxOpenConns, "max-open-connections", env.GetEnvAsInt("ALERTSNITCH_MAX_OPEN_CONNS", 2), "maximum number of connections in the pool")
 	flag.IntVar(&args.MaxIdleConns, "max-idle-connections", env.GetEnvAsInt("ALERTSNITCH_MAX_IDLE_CONNS", 1), "maximum number of idle connections in the pool")
-	flag.IntVar(&args.MaxConnLifetimeSeconds, "max-connection-lifetyme-seconds", env.GetEnvAsInt("ALERTSNITCH_MAX_CONN_LIFETIME", 600), "maximum number of seconds a connection is kept alive in the pool")
+	flag.IntVar(&args.MaxConnLifetimeSeconds, "max-connection-lifetime-seconds", env.GetEnvAsInt("ALERTSNITCH_MAX_CONN_LIFETIME", 600), "maximum number of seconds a connection is kept alive in the pool")
 
 	flag.StringVar(&args.LokiTenantID, "tenant-id", env.GetEnv("ALERTSNITCH_LOKI_TENANT_ID", ""), "Loki tenant ID")
 	flag.StringVar(&args.LokiBasicAuthUser, "basic-auth-user", env.GetEnv("ALERTSNITCH_LOKI_BASIC_AUTH_USER", ""), "Loki basic auth user")
 	flag.StringVar(&args.LokiBasicAuthPassword, "basic-auth-password", env.GetEnv("ALERTSNITCH_LOKI_BASIC_AUTH_PASSWORD", ""), "Loki basic auth password")
 
-	flag.StringVar(&args.LokiTLSInsecureSkipVerify, "tls-insecure-skip-verify", env.GetEnv("ALERTSNITCH_LOKI_TLS_INSECURE_SKIP_VERIFY", "false"), "skip TLS certificate verification (only for testing)")
+	flag.BoolVar(&args.LokiTLSInsecureSkipVerify, "tls-insecure-skip-verify", env.GetEnvAsBool("ALERTSNITCH_LOKI_TLS_INSECURE_SKIP_VERIFY", false), "skip TLS certificate verification (only for testing)")
 	flag.StringVar(&args.LokiTLSCACertPath, "tls-ca-cert-path", env.GetEnv("ALERTSNITCH_LOKI_TLS_CA_CERT_PATH", ""), "custom CA certificate file path")
 	flag.StringVar(&args.LokiTLSClientCertPath, "tls-client-cert-path", env.GetEnv("ALERTSNITCH_LOKI_TLS_CLIENT_CERT_PATH", ""), "client TLS certificate file path")
 	flag.StringVar(&args.LokiTLSClientKeyPath, "tls-client-key-path", env.GetEnv("ALERTSNITCH_LOKI_TLS_CLIENT_KEY_PATH", ""), "client TLS private key file path")
@@ -87,72 +117,113 @@ func main() {
 	flag.StringVar(&args.LokiAllowedLabels, "loki-allowed-labels", env.GetEnv("ALERTSNITCH_LOKI_ALLOWED_LABELS", ""), "comma-separated list of labels to extract as stream labels (e.g., severity,priority,env)")
 
 	flag.Parse()
+	return args
+}
 
-	if args.Version {
-		fmt.Println(version.GetVersion())
-		os.Exit(0)
+// buildConfig translates command-line/env arguments into the typed storage
+// configuration, validating values that were previously parsed (and silently
+// discarded on error) deep inside the Loki backend.
+func buildConfig(args Args) (storage.Config, error) {
+	cfg := storage.Config{
+		Backend: args.DBBackend,
+		SQL: sqlstore.Config{
+			DSN:                    args.DSN,
+			MaxIdleConns:           args.MaxIdleConns,
+			MaxOpenConns:           args.MaxOpenConns,
+			MaxConnLifetimeSeconds: args.MaxConnLifetimeSeconds,
+		},
 	}
 
-	if args.Debug {
-		logrus.SetLevel(logrus.DebugLevel)
-	}
-
-	options := map[string]string{
-		"tenant_id":                args.LokiTenantID,
-		"basic_auth_user":          args.LokiBasicAuthUser,
-		"basic_auth_password":      args.LokiBasicAuthPassword,
-		"tls_insecure_skip_verify": args.LokiTLSInsecureSkipVerify,
-		"tls_ca_cert_path":         args.LokiTLSCACertPath,
-		"tls_client_cert_path":     args.LokiTLSClientCertPath,
-		"tls_client_key_path":      args.LokiTLSClientKeyPath,
-		"allowed_labels":           args.LokiAllowedLabels,
-	}
-
-	if args.LokiBatchEnabled {
-		options["batch_enabled"] = "true"
-		options["batch_size"] = fmt.Sprintf("%d", args.LokiBatchSize)
-		options["batch_flush_timeout"] = args.LokiBatchFlushTimeout
-		options["batch_max_retries"] = fmt.Sprintf("%d", args.LokiBatchMaxRetries)
-	}
-
-	driver, err := db.Connect(args.DBBackend, db.ConnectionArgs{
-		DSN:                    args.DSN,
-		MaxIdleConns:           args.MaxIdleConns,
-		MaxOpenConns:           args.MaxOpenConns,
-		MaxConnLifetimeSeconds: args.MaxConnLifetimeSeconds,
-		Options:                options,
-	})
-	if err != nil {
-		logrus.Fatalf("failed to connect to database: %s", err)
-	}
-	defer func() {
-		if err := driver.Close(); err != nil {
-			logrus.Errorf("failed to close database connection: %s", err)
+	if args.DBBackend == "loki" {
+		lokiCfg, err := buildLokiConfig(args)
+		if err != nil {
+			return storage.Config{}, err
 		}
-	}()
+		cfg.Loki = lokiCfg
+	}
+	return cfg, nil
+}
 
-	logrus.Info("Connected to database")
+func buildLokiConfig(args Args) (loki.Config, error) {
+	if args.DSN == "" {
+		return loki.Config{}, fmt.Errorf("empty Loki endpoint provided, can't connect to Loki")
+	}
+	endpoint, err := url.Parse(args.DSN)
+	if err != nil {
+		return loki.Config{}, fmt.Errorf("failed to parse Loki endpoint: %w", err)
+	}
 
-	s := server.New(driver, args.Debug)
+	batch := loki.DefaultBatchConfig()
+	if args.LokiBatchEnabled {
+		batch.Enabled = true
+		if args.LokiBatchSize > 0 {
+			batch.Size = args.LokiBatchSize
+		}
+		if args.LokiBatchMaxRetries >= 0 {
+			batch.MaxRetries = args.LokiBatchMaxRetries
+		}
+		if args.LokiBatchFlushTimeout != "" {
+			d, err := time.ParseDuration(args.LokiBatchFlushTimeout)
+			if err != nil {
+				return loki.Config{}, fmt.Errorf("invalid loki-batch-flush-timeout %q: %w", args.LokiBatchFlushTimeout, err)
+			}
+			batch.FlushTimeout = d
+		}
+	}
 
-	// Handle graceful shutdown
+	var allowed []string
+	for _, label := range strings.Split(args.LokiAllowedLabels, ",") {
+		if l := strings.TrimSpace(label); l != "" {
+			allowed = append(allowed, l)
+		}
+	}
+
+	return loki.Config{
+		URL: endpoint,
+		Auth: loki.AuthConfig{
+			TenantID:          args.LokiTenantID,
+			BasicAuthUser:     args.LokiBasicAuthUser,
+			BasicAuthPassword: args.LokiBasicAuthPassword,
+		},
+		TLS: loki.TLSConfig{
+			InsecureSkipVerify: args.LokiTLSInsecureSkipVerify,
+			CACertPath:         args.LokiTLSCACertPath,
+			ClientCertPath:     args.LokiTLSClientCertPath,
+			ClientKeyPath:      args.LokiTLSClientKeyPath,
+		},
+		Batch:         batch,
+		AllowedLabels: allowed,
+	}, nil
+}
+
+// run starts the server and coordinates graceful shutdown: on SIGINT/SIGTERM it
+// drains in-flight requests and then flushes/closes the backend — all within a
+// single bounded context, so buffered alerts get a real chance to flush.
+func run(s *server.Server, driver internal.Storer, address string) {
+	stopped := make(chan struct{})
+
 	go func() {
+		defer close(stopped)
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 		sig := <-sigCh
 		logrus.Infof("Received signal %s, initiating graceful shutdown...", sig)
 
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 
 		if err := s.Shutdown(ctx); err != nil {
-			logrus.Errorf("Server shutdown error: %s", err)
+			logrus.Errorf("server shutdown error: %s", err)
+		}
+		if err := driver.Close(ctx); err != nil {
+			logrus.Errorf("backend close error: %s", err)
 		}
 	}()
 
-	if err := s.Start(args.Address); err != nil {
+	if err := s.Start(address); err != nil {
 		logrus.Fatalf("Server error: %s", err)
 	}
 
+	<-stopped
 	logrus.Info("Server stopped gracefully")
 }

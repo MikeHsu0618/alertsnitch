@@ -7,9 +7,9 @@ COPY . .
 RUN go mod download
 
 RUN CGO_ENABLED=0 go build -v -o alertsnitch \
-    -ldflags="-X gitlab.com/yakshaving.art/alertsnitch/version.Version=$(git describe --tags --abbrev=0) \
-              -X gitlab.com/yakshaving.art/alertsnitch/version.Date=$(date +%FT%T%z) \
-              -X gitlab.com/yakshaving.art/alertsnitch/version.Commit=$(git rev-parse HEAD)"
+    -ldflags="-X github.com/mikehsu0618/alertsnitch/version.Version=$(git describe --tags --abbrev=0) \
+              -X github.com/mikehsu0618/alertsnitch/version.Date=$(date +%FT%T%z) \
+              -X github.com/mikehsu0618/alertsnitch/version.Commit=$(git rev-parse HEAD)"
 
 # Final stage
 FROM scratch

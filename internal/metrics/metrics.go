@@ -5,7 +5,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"gitlab.com/yakshaving.art/alertsnitch/version"
+	"github.com/mikehsu0618/alertsnitch/version"
 )
 
 var (
@@ -65,6 +65,21 @@ var (
 		Help:      "total number of alerts that failed to be saved in the database",
 	}, []string{"receiver", "status"})
 )
+
+// RecordSaveOutcome records the durable outcome of persisting alertCount alerts
+// for a (receiver, status) pair. Storage backends call this at the real point
+// of persistence — synchronously for SQL/null, at batch-flush resolution for
+// Loki — so the saved/failed counters reflect durability rather than receipt.
+func RecordSaveOutcome(receiver, status string, alertCount int, err error) {
+	if alertCount == 0 {
+		return
+	}
+	if err != nil {
+		AlertsSavingFailuresTotal.WithLabelValues(receiver, status).Add(float64(alertCount))
+		return
+	}
+	AlertsSavedTotal.WithLabelValues(receiver, status).Add(float64(alertCount))
+}
 
 func init() {
 	bootTime.Set(float64(time.Now().Unix()))

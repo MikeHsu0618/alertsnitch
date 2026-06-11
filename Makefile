@@ -12,9 +12,9 @@ CGO_ENABLED ?= 0
 CURRENT_DIR := $(shell pwd)
 
 LDFLAGS := -s -w \
-	-X gitlab.com/yakshaving.art/alertsnitch/version.Version=$(VERSION) \
-	-X gitlab.com/yakshaving.art/alertsnitch/version.Commit=$(COMMIT_ID) \
-	-X gitlab.com/yakshaving.art/alertsnitch/version.Date=$(COMMIT_DATE)
+	-X github.com/mikehsu0618/alertsnitch/version.Version=$(VERSION) \
+	-X github.com/mikehsu0618/alertsnitch/version.Commit=$(COMMIT_ID) \
+	-X github.com/mikehsu0618/alertsnitch/version.Date=$(COMMIT_DATE)
 
 .PHONY: help
 help: ## Show this help
@@ -116,11 +116,19 @@ deps-update: ## Update all dependencies
 # Database bootstrap targets
 .PHONY: bootstrap-mysql
 bootstrap-mysql: ## Bootstrap MySQL schema (requires MYSQL_* env vars)
-	bash script.d/bootstrap_mysql.sh
+	bash database/bootstrap_mysql.sh
 
 .PHONY: bootstrap-postgres
 bootstrap-postgres: ## Bootstrap PostgreSQL schema (requires POSTGRES_* env vars)
-	bash script.d/bootstrap_postgres.sh
+	bash database/bootstrap_postgres.sh
+
+.PHONY: integration
+integration: ## Run integration tests against the local testing database
+	go test -v -tags integration -race -coverprofile=coverage.out ./...
+
+.PHONY: teardown_local_testing
+teardown_local_testing: ## Tear down the local integration testing container
+	@docker stop alertsnitch-mysql >/dev/null 2>&1 || true
 
 .PHONY: bootstrap_local_testing
 bootstrap_local_testing: ## Builds and bootstraps a local integration testing environment

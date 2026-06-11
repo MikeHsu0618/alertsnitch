@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gitlab.com/yakshaving.art/alertsnitch/internal"
+	"github.com/mikehsu0618/alertsnitch/internal"
 )
 
 // Parse gets a webhook payload and parses it returning a prometheus
