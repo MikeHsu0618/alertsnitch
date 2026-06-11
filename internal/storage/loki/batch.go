@@ -28,10 +28,11 @@ type batchProcessor struct {
 	client *Client
 	cfg    BatchConfig
 
-	in      chan queuedAlert
-	flushCh chan []queuedAlert
-	stopCh  chan struct{}
-	wg      sync.WaitGroup
+	in       chan queuedAlert
+	flushCh  chan []queuedAlert
+	stopCh   chan struct{}
+	stopOnce sync.Once
+	wg       sync.WaitGroup
 }
 
 func newBatchProcessor(client *Client, cfg BatchConfig) *batchProcessor {
@@ -197,8 +198,9 @@ func (b *batchProcessor) mergeStreams(batch []queuedAlert) []stream {
 }
 
 // stop signals shutdown and waits for buffered alerts to flush, bounded by ctx.
+// It is safe to call more than once.
 func (b *batchProcessor) stop(ctx context.Context) {
-	close(b.stopCh)
+	b.stopOnce.Do(func() { close(b.stopCh) })
 
 	done := make(chan struct{})
 	go func() {
