@@ -116,11 +116,19 @@ deps-update: ## Update all dependencies
 # Database bootstrap targets
 .PHONY: bootstrap-mysql
 bootstrap-mysql: ## Bootstrap MySQL schema (requires MYSQL_* env vars)
-	bash script.d/bootstrap_mysql.sh
+	bash database/bootstrap_mysql.sh
 
 .PHONY: bootstrap-postgres
 bootstrap-postgres: ## Bootstrap PostgreSQL schema (requires POSTGRES_* env vars)
-	bash script.d/bootstrap_postgres.sh
+	bash database/bootstrap_postgres.sh
+
+.PHONY: integration
+integration: ## Run integration tests against the local testing database
+	go test -v -tags integration -race -coverprofile=coverage.out ./...
+
+.PHONY: teardown_local_testing
+teardown_local_testing: ## Tear down the local integration testing container
+	@docker stop alertsnitch-mysql >/dev/null 2>&1 || true
 
 .PHONY: bootstrap_local_testing
 bootstrap_local_testing: ## Builds and bootstraps a local integration testing environment

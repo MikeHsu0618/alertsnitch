@@ -185,6 +185,15 @@ route:
 - **ALERTSNITCH_BACKEND_ENDPOINT** *required* database/loki connection endpoint
 - **ALERTSNITCH_ADDR** same as **-listen.address**
 - **ALERTSNITCH_BACKEND** same as **-database-backend**
+- **ALERTSNITCH_DEBUG** set to `true` to dump received webhook payloads to the log (default: `false`)
+
+#### SQL Connection Pool (MySQL/Postgres)
+- **ALERTSNITCH_MAX_OPEN_CONNS** maximum number of open connections in the pool (default: 2)
+- **ALERTSNITCH_MAX_IDLE_CONNS** maximum number of idle connections in the pool (default: 1)
+- **ALERTSNITCH_MAX_CONN_LIFETIME** maximum number of seconds a connection is kept alive (default: 600)
+
+#### Loki Stream Labels
+- **ALERTSNITCH_LOKI_ALLOWED_LABELS** comma-separated list of alert labels to promote to Loki stream labels, e.g. `severity,priority,env` (default: a built-in set covering severity, namespace, pod, service, etc.)
 
 #### Loki Authentication Configuration
 - **ALERTSNITCH_LOKI_TENANT_ID** Loki tenant ID (optional)

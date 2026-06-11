@@ -49,7 +49,7 @@ archives:
     files:
       - README.md
       - LICENSE
-      - db.d/**/*
+      - database/**/*
 
 checksum:
   name_template: 'checksums.txt'
