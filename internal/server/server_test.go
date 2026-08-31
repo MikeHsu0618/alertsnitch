@@ -17,16 +17,19 @@ import (
 // internal.HealthChecker. It records the last AlertGroup it was asked to save
 // and lets each method's behavior be injected.
 type fakeStorer struct {
-	saved       *internal.AlertGroup
-	savedLabels map[string]string
-	saveErr     error
-	notReady    bool
-	notHealthy  bool
-	saveCalled  int
+	saved         *internal.AlertGroup
+	savedLabels   map[string]string
+	saveCtxAlive  bool
+	probeCtxAlive bool
+	saveErr       error
+	notReady      bool
+	notHealthy    bool
+	saveCalled    int
 }
 
-func (f *fakeStorer) Save(_ context.Context, data *internal.AlertGroup, extraLabels map[string]string) error {
+func (f *fakeStorer) Save(ctx context.Context, data *internal.AlertGroup, extraLabels map[string]string) error {
 	f.saveCalled++
+	f.saveCtxAlive = ctx.Err() == nil
 	f.saved = data
 	f.savedLabels = extraLabels
 	return f.saveErr
@@ -34,11 +37,13 @@ func (f *fakeStorer) Save(_ context.Context, data *internal.AlertGroup, extraLab
 
 func (f *fakeStorer) Close(context.Context) error { return nil }
 
-func (f *fakeStorer) CheckLiveness(context.Context) internal.Health {
+func (f *fakeStorer) CheckLiveness(ctx context.Context) internal.Health {
+	f.probeCtxAlive = ctx.Err() == nil
 	return internal.Health{Ready: !f.notReady, Healthy: true}
 }
 
-func (f *fakeStorer) CheckReadiness(context.Context) internal.Health {
+func (f *fakeStorer) CheckReadiness(ctx context.Context) internal.Health {
+	f.probeCtxAlive = ctx.Err() == nil
 	return internal.Health{Ready: !f.notReady, Healthy: !f.notHealthy}
 }
 
@@ -65,6 +70,24 @@ func TestWebhookPost_ValidPayloadIsSaved(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, 1, fake.saveCalled, "Save should be called exactly once")
 	assert.NotNil(t, fake.saved)
+	assert.True(t, fake.saveCtxAlive, "save context should stay active while Save runs")
+}
+
+func TestWebhookPost_SaveUsesDetachedContext(t *testing.T) {
+	fake := &fakeStorer{}
+	s := New(fake, false)
+
+	req := httptest.NewRequest(http.MethodPost, "/webhook", strings.NewReader(string(validPayload(t))))
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	req = req.WithContext(ctx)
+
+	rec := httptest.NewRecorder()
+	s.r.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, 1, fake.saveCalled)
+	assert.True(t, fake.saveCtxAlive, "save should not inherit a canceled request context")
 }
 
 func TestWebhookPost_InvalidJSONReturns400(t *testing.T) {
@@ -121,6 +144,21 @@ func TestReadyProbe(t *testing.T) {
 		s.r.ServeHTTP(rec, req)
 		assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
 	})
+
+	t.Run("probe uses detached context", func(t *testing.T) {
+		fake := &fakeStorer{}
+		s := New(fake, false)
+		req := httptest.NewRequest(http.MethodGet, "/-/ready", nil)
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		req = req.WithContext(ctx)
+
+		rec := httptest.NewRecorder()
+		s.r.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.True(t, fake.probeCtxAlive, "probe should not inherit a canceled request context")
+	})
 }
 
 func TestHealthProbe(t *testing.T) {
@@ -130,6 +168,21 @@ func TestHealthProbe(t *testing.T) {
 		rec := httptest.NewRecorder()
 		s.r.ServeHTTP(rec, req)
 		assert.Equal(t, http.StatusOK, rec.Code)
+	})
+
+	t.Run("probe uses detached context", func(t *testing.T) {
+		fake := &fakeStorer{}
+		s := New(fake, false)
+		req := httptest.NewRequest(http.MethodGet, "/-/health", nil)
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		req = req.WithContext(ctx)
+
+		rec := httptest.NewRecorder()
+		s.r.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.True(t, fake.probeCtxAlive, "probe should not inherit a canceled request context")
 	})
 
 	t.Run("unhealthy when ping fails", func(t *testing.T) {

@@ -35,6 +35,7 @@ type Args struct {
 	MaxIdleConns           int
 	MaxOpenConns           int
 	MaxConnLifetimeSeconds int
+	MaxConnIdleTimeSeconds int
 
 	LokiTenantID          string
 	LokiBasicAuthUser     string
@@ -103,6 +104,7 @@ func parseArgs() Args {
 	flag.IntVar(&args.MaxOpenConns, "max-open-connections", env.GetEnvAsInt("ALERTSNITCH_MAX_OPEN_CONNS", 2), "maximum number of connections in the pool")
 	flag.IntVar(&args.MaxIdleConns, "max-idle-connections", env.GetEnvAsInt("ALERTSNITCH_MAX_IDLE_CONNS", 1), "maximum number of idle connections in the pool")
 	flag.IntVar(&args.MaxConnLifetimeSeconds, "max-connection-lifetime-seconds", env.GetEnvAsInt("ALERTSNITCH_MAX_CONN_LIFETIME", 600), "maximum number of seconds a connection is kept alive in the pool")
+	flag.IntVar(&args.MaxConnIdleTimeSeconds, "max-connection-idle-time-seconds", env.GetEnvAsInt("ALERTSNITCH_MAX_CONN_IDLE_TIME", 120), "maximum number of seconds a connection may remain idle before being closed (0 disables)")
 
 	flag.StringVar(&args.LokiTenantID, "tenant-id", env.GetEnv("ALERTSNITCH_LOKI_TENANT_ID", ""), "Loki tenant ID")
 	flag.StringVar(&args.LokiBasicAuthUser, "basic-auth-user", env.GetEnv("ALERTSNITCH_LOKI_BASIC_AUTH_USER", ""), "Loki basic auth user")
@@ -139,6 +141,7 @@ func buildConfig(args Args) (storage.Config, error) {
 			MaxIdleConns:           args.MaxIdleConns,
 			MaxOpenConns:           args.MaxOpenConns,
 			MaxConnLifetimeSeconds: args.MaxConnLifetimeSeconds,
+			MaxConnIdleTimeSeconds: args.MaxConnIdleTimeSeconds,
 		},
 	}
 

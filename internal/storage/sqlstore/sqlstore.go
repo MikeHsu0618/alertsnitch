@@ -24,6 +24,7 @@ type Config struct {
 	MaxIdleConns           int
 	MaxOpenConns           int
 	MaxConnLifetimeSeconds int
+	MaxConnIdleTimeSeconds int
 }
 
 // base carries the shared *sql.DB plumbing for both dialects.
@@ -44,24 +45,49 @@ func open(driver string, cfg Config) (base, error) {
 	}
 	conn.SetMaxIdleConns(cfg.MaxIdleConns)
 	conn.SetMaxOpenConns(cfg.MaxOpenConns)
+	// SetConnMaxIdleTime before SetConnMaxLifetime so the pool cleaner interval
+	// is configured correctly; idle recycling avoids reusing connections the
+	// server or a proxy already closed (MySQL driver "bad idle connection: EOF").
+	if cfg.MaxConnIdleTimeSeconds > 0 {
+		conn.SetConnMaxIdleTime(time.Duration(cfg.MaxConnIdleTimeSeconds) * time.Second)
+	}
 	conn.SetConnMaxLifetime(time.Duration(cfg.MaxConnLifetimeSeconds) * time.Second)
 
 	return base{db: conn, name: driver}, nil
 }
 
+// unitOfWork runs f in a transaction. MySQL deadlock (1213) is retried up to
+// mysqlDeadlockMaxRetries times — concurrent LabelKV upserts can still race
+// even with sorted lock order.
 func (b base) unitOfWork(ctx context.Context, f func(*sql.Tx) error) error {
+	var err error
+	for attempt := 0; attempt < mysqlDeadlockMaxRetries; attempt++ {
+		err = b.runUnitOfWork(ctx, f)
+		if err == nil || ctx.Err() != nil || !isMySQLDeadlock(err) {
+			return err
+		}
+		logrus.Warnf("MySQL deadlock detected, retrying transaction (attempt %d/%d)", attempt+1, mysqlDeadlockMaxRetries)
+	}
+	return err
+}
+
+func (b base) runUnitOfWork(ctx context.Context, f func(*sql.Tx) error) error {
 	tx, err := b.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	if err := f(tx); err != nil {
-		if rbErr := tx.Rollback(); rbErr != nil {
-			return fmt.Errorf("failed to rollback transaction (%w) after failing execution: %w", rbErr, err)
-		}
+		// The driver may already have rolled back when ctx was canceled.
+		_ = tx.Rollback()
 		return fmt.Errorf("failed execution: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
+		// Deadlocks can surface on commit; wrap so isMySQLDeadlock still matches
+		// and the outer retry loop treats it like an execution failure.
+		if isMySQLDeadlock(err) {
+			return fmt.Errorf("failed execution: %w", err)
+		}
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	return nil

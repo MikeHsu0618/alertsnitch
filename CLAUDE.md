@@ -34,7 +34,7 @@ go test ./internal/storage/loki -run TestName/subtest_name -v   # specific subte
 ```
 
 The SQL backends (`internal/storage/sqlstore/{mysql,postgres}.go`) only have meaningful coverage when a real
-database is reachable. CI spins up MySQL 8.0 and Postgres 15 service containers, bootstraps them
+database is reachable. CI spins up MySQL 8.4 and Postgres 15 service containers, bootstraps them
 with all four SQL files, and sets `ALERTSNITCH_BACKEND` + `ALERTSNITCH_BACKEND_ENDPOINT` (see
 `.github/workflows/ci.yml`). To replicate locally, run a DB, apply the files in
 `database/<engine>/` in order (`0.0.1-bootstrap.sql`, `0.1.0-fingerprint.sql`, `0.2.0-labelkv.sql`,

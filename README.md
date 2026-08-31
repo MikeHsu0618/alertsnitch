@@ -191,6 +191,7 @@ route:
 - **ALERTSNITCH_MAX_OPEN_CONNS** maximum number of open connections in the pool (default: 2)
 - **ALERTSNITCH_MAX_IDLE_CONNS** maximum number of idle connections in the pool (default: 1)
 - **ALERTSNITCH_MAX_CONN_LIFETIME** maximum number of seconds a connection is kept alive (default: 600)
+- **ALERTSNITCH_MAX_CONN_IDLE_TIME** maximum number of seconds a connection may remain idle before being closed (default: 120; set to 0 to disable)
 
 #### Loki Stream Labels
 - **ALERTSNITCH_LOKI_ALLOWED_LABELS** comma-separated list of alert labels to promote to Loki stream labels, e.g. `severity,priority,env` (default: a built-in set of **low-cardinality** labels — `severity, priority, level, env, team, cluster, namespace, service, job`). High-cardinality labels such as `instance`, `pod`, `node` and `container` are intentionally excluded to keep Loki's active-stream count manageable; they remain in the JSON log line and can be surfaced via structured metadata (below). Set this only if you understand the cardinality of the labels you add.

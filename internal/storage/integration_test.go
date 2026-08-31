@@ -4,7 +4,9 @@ package storage_test
 
 import (
 	"context"
+	"database/sql"
 	"os"
+	"sync"
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -33,6 +35,7 @@ func connectForTest(t *testing.T) internal.Storer {
 			MaxIdleConns:           1,
 			MaxOpenConns:           2,
 			MaxConnLifetimeSeconds: 600,
+			MaxConnIdleTimeSeconds: 120,
 		},
 	})
 	require.NoError(t, err)
@@ -81,4 +84,78 @@ func TestSavingAFiringAlertWorks(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.NoError(t, driver.Save(context.Background(), data, nil))
+}
+
+func openSQLDBForTest(t *testing.T) *sql.DB {
+	t.Helper()
+	if os.Getenv("ALERTSNITCH_BACKEND") != "mysql" {
+		t.Skip("MySQL-only test")
+	}
+	db, err := sql.Open("mysql", os.Getenv(internal.DSNVar))
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = db.Close() })
+	return db
+}
+
+func sampleAlertGroup(t *testing.T) *internal.AlertGroup {
+	t.Helper()
+	b, err := os.ReadFile("../webhook/sample-payload.json")
+	require.NoError(t, err)
+	data, err := webhook.Parse(b)
+	require.NoError(t, err)
+	return data
+}
+
+func countLabelKV(t *testing.T, db *sql.DB, key, value string) int {
+	t.Helper()
+	var count int
+	err := db.QueryRow(`
+		SELECT COUNT(*) FROM LabelKV WHERE LabelKey = ? AND Value = ?`,
+		key, value).Scan(&count)
+	require.NoError(t, err)
+	return count
+}
+
+func TestMySQLLabelKVDedup(t *testing.T) {
+	db := openSQLDBForTest(t)
+	driver := connectForTest(t)
+	defer driver.Close(context.Background())
+
+	data := sampleAlertGroup(t)
+	const key, value = "severity", "critical"
+
+	require.NoError(t, driver.Save(context.Background(), data, nil))
+	countAfterFirst := countLabelKV(t, db, key, value)
+	require.Greater(t, countAfterFirst, 0)
+
+	for i := 0; i < 3; i++ {
+		require.NoError(t, driver.Save(context.Background(), data, nil))
+	}
+	assert.Equal(t, countAfterFirst, countLabelKV(t, db, key, value),
+		"upsert should reuse one LabelKV row per unique (key, value) pair")
+}
+
+func TestMySQLConcurrentSaveSharedLabels(t *testing.T) {
+	openSQLDBForTest(t) // skip unless MySQL is configured
+	driver := connectForTest(t)
+	defer driver.Close(context.Background())
+
+	data := sampleAlertGroup(t)
+	const workers = 16
+
+	var wg sync.WaitGroup
+	errs := make(chan error, workers)
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs <- driver.Save(context.Background(), data, nil)
+		}()
+	}
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		assert.NoError(t, err)
+	}
 }

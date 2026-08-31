@@ -16,9 +16,15 @@ import (
 	"github.com/mikehsu0618/alertsnitch/internal/webhook"
 )
 
-// SupportedWebhookVersion is the alert webhook data version that is supported
-// by this app
-const SupportedWebhookVersion = "4"
+const (
+	SupportedWebhookVersion = "4"
+	// saveTimeout bounds persistence even when the request context is canceled
+	// (e.g. during graceful shutdown). Matches main.shutdownTimeout.
+	saveTimeout = 30 * time.Second
+	// probeTimeout bounds health checks independently of probe client disconnect
+	// or request-context cancellation during graceful shutdown.
+	probeTimeout = 5 * time.Second
+)
 
 // Server represents a web server that processes webhooks
 type Server struct {
@@ -128,7 +134,11 @@ func (s *Server) webhookPost(w http.ResponseWriter, r *http.Request) {
 
 	// The backend owns the saved/failed counters, recording them at the real
 	// point of persistence (which, for Loki batch mode, is asynchronous).
-	if err = s.db.Save(r.Context(), data, queryLabels(r)); err != nil {
+	// WithoutCancel keeps in-flight saves alive when the request context is
+	// canceled during shutdown; saveTimeout still bounds hung DB calls.
+	saveCtx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), saveTimeout)
+	defer cancel()
+	if err = s.db.Save(saveCtx, data, queryLabels(r)); err != nil {
 		logrus.Errorf("failed to save alerts: %s", err)
 		http.Error(w, fmt.Sprintf("failed to save alerts: %s", err), http.StatusInternalServerError)
 		return
@@ -138,7 +148,10 @@ func (s *Server) webhookPost(w http.ResponseWriter, r *http.Request) {
 // healthyProbe is the liveness probe: it only checks that the backend is
 // reachable (no schema query), so a frequent probe stays cheap.
 func (s *Server) healthyProbe(w http.ResponseWriter, r *http.Request) {
-	h := s.probe(r.Context(), internal.HealthChecker.CheckLiveness)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), probeTimeout)
+	defer cancel()
+
+	h := s.probe(ctx, internal.HealthChecker.CheckLiveness)
 	if !h.Ready {
 		logrus.Errorf("backend is not reachable: %s", h.Detail)
 		http.Error(w, fmt.Sprintf("backend is not reachable: %s", h.Detail), http.StatusServiceUnavailable)
@@ -148,7 +161,10 @@ func (s *Server) healthyProbe(w http.ResponseWriter, r *http.Request) {
 
 // readyProbe is the readiness probe: reachability plus schema/model compatibility.
 func (s *Server) readyProbe(w http.ResponseWriter, r *http.Request) {
-	h := s.probe(r.Context(), internal.HealthChecker.CheckReadiness)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), probeTimeout)
+	defer cancel()
+
+	h := s.probe(ctx, internal.HealthChecker.CheckReadiness)
 	if !h.Ready {
 		logrus.Errorf("backend is not reachable: %s", h.Detail)
 		http.Error(w, fmt.Sprintf("backend is not reachable: %s", h.Detail), http.StatusServiceUnavailable)
