@@ -3,7 +3,7 @@ module github.com/mikehsu0618/alertsnitch
 go 1.27
 
 require (
-	github.com/go-sql-driver/mysql v1.10.1
+	github.com/go-sql-driver/mysql v1.10.2
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.12.3
